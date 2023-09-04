@@ -22,11 +22,11 @@
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_3 Point_3;
 typedef CGAL::Polyhedron_3<K> Polyhedron;
-class Triangle; // forward declare the Triangle class
-bool areAdjacent(const Triangle& t1, const Triangle& t2);
+class Triangle;
+class TriangleAdjacency;
 class Component; // forward declare the Component class
-bool areTrianglesContiguous(const std::vector<Triangle>& triangles);
-bool areComponentsSimilar(const Component& a, const Component& b, double similarityThreshold);
+// bool areTrianglesContiguous(const std::vector<Triangle>& triangles);
+// bool areComponentsSimilar(const Component& a, const Component& b, double similarityThreshold);
 // void saveTrianglesToOBJ(const std::vector<Triangle>& triangles, const std::string& filename);
 
 // Assuming a Vector3D structure is present somewhere, used for normals.
@@ -75,6 +75,22 @@ public:
         }
         return *this; // Return this instance
     }
+
+    bool operator<(const Vector3D& rhs) const {
+        if (x != rhs.x) return x < rhs.x;
+        if (y != rhs.y) return y < rhs.y;
+        return z < rhs.z;
+    }
+
+    Vector3D operator+(const Vector3D& other) const {
+        Vector3D result;
+        result.x = this->x + other.x;
+        result.y = this->y + other.y;
+        result.z = this->z + other.z;
+        return result;
+    }
+
+
 
     // Length (magnitude) of the vector
     double length() const {
@@ -146,76 +162,285 @@ namespace std {
     };
 }
 
+struct TriangleEdge {
+    Vector3D v1, v2;
+
+    TriangleEdge(const Vector3D& a, const Vector3D& b) : v1(a), v2(b) {
+        if (v2 < v1) {
+            std::swap(v1, v2);
+        }
+    }
+
+    bool operator==(const TriangleEdge& other) const {
+        return v1 == other.v1 && v2 == other.v2;
+    }
+
+    bool operator!=(const TriangleEdge& other) const {
+        return !(*this == other);
+    }
+
+    bool operator<(const TriangleEdge& other) const {
+        if (v1 == other.v1) return v2 < other.v2;
+        return v1 < other.v1;
+    }
+};
+
+struct EdgeHash {
+    Vector3DHash vecHash;  // Using your custom hash function for Vector3D
+
+    size_t operator()(const TriangleEdge& edge) const {
+        size_t h1 = vecHash(edge.v1);
+        size_t h2 = vecHash(edge.v2);
+        return h1 ^ (h2 << 1); // XOR and shift h2 before combining with h1 for better distribution
+    }
+};
+
 class Triangle {
 public:
-    Vector3D vec1, vec2, vec3;  // Geometric vertices
+    Vector3D vec1, vec2, vec3;
     Vector3D normal;
     double area;
     double e_min;
     double e_max;
-    Vector3D color;  // RGB color for the triangle
+    Vector3D color;
 
-    // Default constructor
     Triangle() : area(0), e_min(0), e_max(0) {}
 
-    // Constructor using Vector3D
-    Triangle(const Vector3D& a, const Vector3D& b, const Vector3D& c)
-        : vec1(a), vec2(b), vec3(c) {
-        // Compute edges
-        Vector3D edge1 = vec2 - vec1;
-        Vector3D edge2 = vec3 - vec1;
+    Triangle(const Vector3D& a, const Vector3D& b, const Vector3D& c);
 
-        // Compute normal
-        normal = edge1.cross(edge2);
-        double normalLength = normal.length();
-        normal = normal / normalLength;  // Normalize the normal vector
-
-        // Compute area
-        area = 0.5 * normalLength;
-
-        // Compute edge lengths
-        double len1 = edge1.length();
-        double len2 = edge2.length();
-        double len3 = (vec3 - vec2).length();
-        e_min = std::min({len1, len2, len3});
-        e_max = std::max({len1, len2, len3});
-    }
-
-    // Check if triangle is valid based on vertices
-    bool isValid() const {
-        return !vec1.isZero() || !vec2.isZero() || !vec3.isZero();
-    }
-
-    bool operator==(const Triangle& other) const {
-        return (vec1 == other.vec1 && vec2 == other.vec2 && vec3 == other.vec3) ||
-               (vec1 == other.vec1 && vec2 == other.vec3 && vec3 == other.vec2) ||
-               (vec1 == other.vec2 && vec2 == other.vec1 && vec3 == other.vec3) ||
-               (vec1 == other.vec2 && vec2 == other.vec3 && vec3 == other.vec1) ||
-               (vec1 == other.vec3 && vec2 == other.vec1 && vec3 == other.vec2) ||
-               (vec1 == other.vec3 && vec2 == other.vec2 && vec3 == other.vec1);
-    }
-
-    bool operator!=(const Triangle& other) const {
-        return !(*this == other);
-    }
-
-    bool operator<(const Triangle& other) const {
-        return this->area < other.area;
-    }
-
-    bool isAdjacent(const Triangle& other) const {
-        return areAdjacent(*this, other);
-    }
-
-    void setColor(const Vector3D& assignedColor) {
-        color = assignedColor;
-    }
-
-    std::string toString() const {
-        return "[ " + vec1.toString() + ", " + vec2.toString() + ", " + vec3.toString() + " ]";
-    }
-
+    bool isValid() const;
+    bool operator==(const Triangle& other) const;
+    bool operator!=(const Triangle& other) const;
+    bool operator<(const Triangle& other) const;
+    void setColor(const Vector3D& assignedColor);
+    std::vector<TriangleEdge> getEdges() const;
+    bool isAdjacent(const Triangle& other, const class TriangleAdjacency& adjacency) const;
+    std::string toString() const;  // Added toString() method
 };
+
+class TriangleAdjacency {
+private:
+    typedef TriangleEdge Edge;
+    std::unordered_map<Edge, std::vector<Triangle>, EdgeHash> adjacencyMap;
+
+public:
+    void addTriangle(const Triangle& triangle);
+    bool isAdjacent(const Triangle& t1, const Triangle& t2) const;
+};
+
+// Triangle methods
+Triangle::Triangle(const Vector3D& a, const Vector3D& b, const Vector3D& c)
+    : vec1(a), vec2(b), vec3(c) {
+    Vector3D edge1 = vec2 - vec1;
+    Vector3D edge2 = vec3 - vec1;
+    normal = edge1.cross(edge2);
+    double normalLength = normal.length();
+    normal = normal / normalLength;
+    area = 0.5 * normalLength;
+    double len1 = edge1.length();
+    double len2 = edge2.length();
+    double len3 = (vec3 - vec2).length();
+    e_min = std::min({len1, len2, len3});
+    e_max = std::max({len1, len2, len3});
+    
+}
+
+bool Triangle::isValid() const {
+    return !vec1.isZero() || !vec2.isZero() || !vec3.isZero();
+}
+
+bool Triangle::operator==(const Triangle& other) const {
+    return (vec1 == other.vec1 && vec2 == other.vec2 && vec3 == other.vec3) ||
+           (vec1 == other.vec1 && vec2 == other.vec3 && vec3 == other.vec2) ||
+           (vec1 == other.vec2 && vec2 == other.vec1 && vec3 == other.vec3) ||
+           (vec1 == other.vec2 && vec2 == other.vec3 && vec3 == other.vec1) ||
+           (vec1 == other.vec3 && vec2 == other.vec1 && vec3 == other.vec2) ||
+           (vec1 == other.vec3 && vec2 == other.vec2 && vec3 == other.vec1);
+}
+
+
+bool Triangle::operator!=(const Triangle& other) const {
+    return !(*this == other);
+}
+
+bool Triangle::operator<(const Triangle& other) const {
+    return this->area < other.area;
+}
+
+void Triangle::setColor(const Vector3D& assignedColor) {
+    color = assignedColor;
+}
+
+std::vector<TriangleEdge> Triangle::getEdges() const {
+    return {TriangleEdge(vec1, vec2), TriangleEdge(vec2, vec3), TriangleEdge(vec3, vec1)};
+}
+
+bool Triangle::isAdjacent(const Triangle& other, const TriangleAdjacency& adjacency) const {
+    return adjacency.isAdjacent(*this, other);
+}
+
+std::string Triangle::toString() const {
+    return "Triangle: [" + vec1.toString() + ", " + vec2.toString() + ", " + vec3.toString() + "]";
+}
+
+// TriangleAdjacency methods
+void TriangleAdjacency::addTriangle(const Triangle& triangle) {
+    std::vector<TriangleEdge> edges = {
+        TriangleEdge(triangle.vec1, triangle.vec2),
+        TriangleEdge(triangle.vec2, triangle.vec3),
+        TriangleEdge(triangle.vec3, triangle.vec1)
+    };
+
+    for (const TriangleEdge& edge : edges) {
+        adjacencyMap[edge].push_back(triangle);
+    }
+}
+
+bool TriangleAdjacency::isAdjacent(const Triangle& t1, const Triangle& t2) const {
+    std::vector<TriangleEdge> edges = {
+        TriangleEdge(t1.vec1, t1.vec2),
+        TriangleEdge(t1.vec2, t1.vec3),
+        TriangleEdge(t1.vec3, t1.vec1)
+    };
+
+    for (const TriangleEdge& edge : edges) {
+        if (adjacencyMap.count(edge)) {
+            const auto& triangles = adjacencyMap.at(edge);
+            if (std::find(triangles.begin(), triangles.end(), t2) != triangles.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+
+
+// class TriangleAdjacency {
+// private:
+//     typedef TriangleEdge Edge;
+//     std::unordered_map<Edge, std::vector<Triangle>, EdgeHash> adjacencyMap;
+
+// public:
+//     void addTriangle(const Triangle& triangle);
+//     bool isAdjacent(const Triangle& t1, const Triangle& t2) const;
+// };
+
+// class Triangle {
+// public:
+//     Vector3D vec1, vec2, vec3;  // Geometric vertices
+//     Vector3D normal;
+//     double area;
+//     double e_min;
+//     double e_max;
+//     Vector3D color;  // RGB color for the triangle
+
+//     // Default constructor
+//     Triangle() : area(0), e_min(0), e_max(0) {}
+
+//     // Constructor using Vector3D
+//     Triangle(const Vector3D& a, const Vector3D& b, const Vector3D& c)
+//         : vec1(a), vec2(b), vec3(c) {
+//         // Compute edges
+//         Vector3D edge1 = vec2 - vec1;
+//         Vector3D edge2 = vec3 - vec1;
+
+//         // Compute normal
+//         normal = edge1.cross(edge2);
+//         double normalLength = normal.length();
+//         normal = normal / normalLength;  // Normalize the normal vector
+
+//         // Compute area
+//         area = 0.5 * normalLength;
+
+//         // Compute edge lengths
+//         double len1 = edge1.length();
+//         double len2 = edge2.length();
+//         double len3 = (vec3 - vec2).length();
+//         e_min = std::min({len1, len2, len3});
+//         e_max = std::max({len1, len2, len3});
+//     }
+
+//     // Check if triangle is valid based on vertices
+//     bool isValid() const {
+//         return !vec1.isZero() || !vec2.isZero() || !vec3.isZero();
+//     }
+
+//     bool operator==(const Triangle& other) const {
+//         return (vec1 == other.vec1 && vec2 == other.vec2 && vec3 == other.vec3) ||
+//                (vec1 == other.vec1 && vec2 == other.vec3 && vec3 == other.vec2) ||
+//                (vec1 == other.vec2 && vec2 == other.vec1 && vec3 == other.vec3) ||
+//                (vec1 == other.vec2 && vec2 == other.vec3 && vec3 == other.vec1) ||
+//                (vec1 == other.vec3 && vec2 == other.vec1 && vec3 == other.vec2) ||
+//                (vec1 == other.vec3 && vec2 == other.vec2 && vec3 == other.vec1);
+//     }
+
+//     bool operator!=(const Triangle& other) const {
+//         return !(*this == other);
+//     }
+
+//     bool operator<(const Triangle& other) const {
+//         return this->area < other.area;
+//     }
+
+//     void setColor(const Vector3D& assignedColor) {
+//         color = assignedColor;
+//     }
+
+//     std::vector<TriangleEdge> getEdges() const {
+//         return {TriangleEdge(vec1, vec2), TriangleEdge(vec2, vec3), TriangleEdge(vec3, vec1)};
+//     }
+
+//     bool isAdjacent(const Triangle& other, const TriangleAdjacency* adjacency) const {
+//         if (adjacency) {
+//             return adjacency->isAdjacent(*this, other);
+//         }
+//         return false; // or throw an error if adjacency is nullptr
+//     }
+
+
+// };
+
+
+// class TriangleAdjacency {
+// private:
+//     typedef TriangleEdge Edge;
+//     std::unordered_map<Edge, std::vector<Triangle>, EdgeHash> adjacencyMap;
+
+// public:
+//     void addTriangle(const Triangle& triangle) {
+//         // Extract edges from triangle
+//         std::vector<TriangleEdge> edges = {
+//             TriangleEdge(triangle.vec1, triangle.vec2),
+//             TriangleEdge(triangle.vec2, triangle.vec3),
+//             TriangleEdge(triangle.vec3, triangle.vec1)
+//         };
+
+//         for (const TriangleEdge& edge : edges) {
+//             adjacencyMap[edge].push_back(triangle);
+//         }
+//     }
+
+//     bool isAdjacent(const Triangle& t1, const Triangle& t2) const {
+//         std::vector<TriangleEdge> edges = {
+//             TriangleEdge(t1.vec1, t1.vec2),
+//             TriangleEdge(t1.vec2, t1.vec3),
+//             TriangleEdge(t1.vec3, t1.vec1)
+//         };
+
+//         for (const TriangleEdge& edge : edges) {
+//             if (adjacencyMap.count(edge)) {
+//                 const auto& triangles = adjacencyMap.at(edge);
+//                 if (std::find(triangles.begin(), triangles.end(), t2) != triangles.end()) {
+//                     return true;
+//                 }
+//             }
+//         }
+
+//         return false;
+//     }
+// };
 
 struct TriangleIndices {
     int v1, v2, v3;
@@ -234,55 +459,12 @@ std::vector<Triangle> indicesToTriangles(const std::vector<TriangleIndices>& ind
         Vector3D v2 = vertices[indices.v2];
         Vector3D v3 = vertices[indices.v3];
 
-        // Print the vertices to verify the mapping
-        // std::cout << "Mapping Triangle Vertices: (" << v1.x << "," << v1.y << "," << v1.z << "), "
-        //           << "(" << v2.x << "," << v2.y << "," << v2.z << "), "
-        //           << "(" << v3.x << "," << v3.y << "," << v3.z << ")" << std::endl;
-
         Triangle tri(v1, v2, v3);
         triangles.push_back(tri);
     }
     return triangles;
 }
 
-struct Edge {
-    int v1, v2;
-
-    // Constructor to ensure the smaller vertex is always first. This helps in checking for duplicate edges.
-    Edge(int a, int b) {
-        if (a < b) {
-            v1 = a;
-            v2 = b;
-        } else {
-            v1 = b;
-            v2 = a;
-        }
-    }
-
-    // We need to provide a custom comparator for the map
-    bool operator<(const Edge& other) const {
-        if (v1 == other.v1) return v2 < other.v2;
-        return v1 < other.v1;
-    }
-};
-
-
-struct EdgeIndices {
-    int v1, v2;
-
-    bool operator==(const EdgeIndices& other) const {
-        return (v1 == other.v1 && v2 == other.v2) || (v1 == other.v2 && v2 == other.v1);
-    }
-};
-
-namespace std {
-    template<>
-    struct hash<EdgeIndices> {
-        size_t operator()(const EdgeIndices& edge) const {
-            return std::hash<int>()(edge.v1) ^ std::hash<int>()(edge.v2);
-        }
-    };
-}
 
 struct TriangleHash {
     std::size_t operator()(const Triangle& t) const {
@@ -324,7 +506,10 @@ std::vector<MergeSplitDecision> decisions;
 
 struct TupleHash {
     std::size_t operator()(const std::tuple<int, int, int>& k) const {
-        return std::get<0>(k) ^ std::get<1>(k) ^ std::get<2>(k);
+    size_t h1 = std::hash<int>{}(std::get<0>(k));
+    size_t h2 = std::hash<int>{}(std::get<1>(k));
+    size_t h3 = std::hash<int>{}(std::get<2>(k));
+    return h1 ^ (h2 << 1) ^ (h3 << 2);
     }
 };
 
@@ -338,13 +523,16 @@ private:
     double cellSize;
     double invCellSize;  // Reciprocal of cellSize for optimization
     std::unordered_map<std::tuple<int, int, int>, std::vector<IndexedTriangle>, TupleHash> hashTable;
+    std::unordered_map<Triangle, std::array<std::tuple<int, int, int>, 3>> precomputedHashes;
 
     std::tuple<int, int, int> hash(const Vector3D& vec) {
         int x = static_cast<int>(std::floor(vec.x * invCellSize));
         int y = static_cast<int>(std::floor(vec.y * invCellSize));
         int z = static_cast<int>(std::floor(vec.z * invCellSize));
+
         return {x, y, z};
     }
+    
 
     std::array<std::tuple<int, int, int>, 3> getTriangleHashes(const Triangle& t) {
         return {hash(t.vec1), hash(t.vec2), hash(t.vec3)};
@@ -354,10 +542,13 @@ public:
     SpatialHash(double size) : cellSize(size), invCellSize(1.0 / size) {}
 
     void insert(const Triangle& t, int clusterIndex) {
-        for (const Vector3D& vec : {t.vec1, t.vec2, t.vec3}) {
-            hashTable[hash(vec)].emplace_back(IndexedTriangle{clusterIndex, t});
+        auto triangleHashes = getTriangleHashes(t);
+        for (const auto& h : triangleHashes) {
+            hashTable[h].emplace_back(IndexedTriangle{clusterIndex, t});
         }
+        precomputedHashes[t] = triangleHashes;
     }
+
 
     std::vector<std::string> keys() const {
         std::vector<std::string> allKeys;
@@ -372,74 +563,95 @@ public:
         return hashTable.size();
     }
 
-
     std::unordered_set<int> getNeighboringClusters(const Triangle& t) {
         std::unordered_set<int> clusterIndices;
-        
-        // Cache hash values
-        std::array<std::tuple<int, int, int>, 3> hashes = {hash(t.vec1), hash(t.vec2), hash(t.vec3)};
-        
+
+        // Use the iterator from find to avoid a second lookup
+        auto it = precomputedHashes.find(t);
+        if (it == precomputedHashes.end()) {
+            std::cerr << "Triangle not found in precomputed hashes: " << t.toString() << std::endl;
+            return clusterIndices;
+        }
+
+        const auto& hashes = it->second;
         for (const auto& h : hashes) {
-            for (const auto& indexedTriangle : hashTable[h]) {
-                clusterIndices.insert(indexedTriangle.clusterIndex);
+            // Use iterator for the hashTable lookup
+            auto hashIt = hashTable.find(h);
+            if (hashIt == hashTable.end()) continue;
+
+            for (const auto& indexedTriangle : hashIt->second) {
+                const Triangle& potentialNeighbor = indexedTriangle.triangle;
+                if (potentialNeighbor != t) {
+                    clusterIndices.insert(indexedTriangle.clusterIndex);
+                }
             }
         }
-        
         return clusterIndices;
     }
+
+
     std::vector<Triangle> getPotentialNeighbors(const Triangle& t) {
         std::vector<Triangle> neighbors;
-
-        // Cache the hashes of vertices
-        std::array<std::tuple<int, int, int>, 3> hashes = {hash(t.vec1), hash(t.vec2), hash(t.vec3)};
             
+        // Check if triangle's hashes are precomputed.
+        if (precomputedHashes.find(t) == precomputedHashes.end()) {
+            std::cout << "Error: Triangle hashes not precomputed for: " << t.toString() << std::endl;
+            return neighbors;
+        }
+
+        // Retrieve precomputed hash values for the triangle.
+        auto hashes = precomputedHashes[t];
+
         for (const auto& h : hashes) {
+
             for (const auto& indexedTriangle : hashTable[h]) {
                 const Triangle& potentialNeighbor = indexedTriangle.triangle;
+
+
                 if (potentialNeighbor != t) {  // Exclude the triangle itself
                     neighbors.push_back(potentialNeighbor);
                 }
             }
         }
-
         std::sort(neighbors.begin(), neighbors.end());
         neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), neighbors.end());
 
         return neighbors;
     }
 
-
-    //original
     std::unordered_set<int> getNeighboringClustersForCluster(const Cluster& cluster) {
         std::unordered_set<int> clusterIndices;
         std::unordered_set<Triangle> processedTriangles;
             
         for (const auto& triangle : cluster.triangles) {
-            if (!processedTriangles.insert(triangle).second) continue;
             auto neighboringClustersForTriangle = getNeighboringClusters(triangle);
+            // std::cout << "For triangle " << triangle.toString() << ", found " << neighboringClustersForTriangle.size() << " neighboring clusters." << std::endl;
             clusterIndices.insert(neighboringClustersForTriangle.begin(), neighboringClustersForTriangle.end());
         }
             
         return clusterIndices;
     }
 
-    //original
-    std::vector<Triangle> getPotentialNeighborsForCluster(const Cluster& cluster) {
-        std::vector<Triangle> neighbors;
-        std::unordered_set<Triangle> processedTriangles;
-            
-        for (const auto& triangle : cluster.triangles) {
-            if (!processedTriangles.insert(triangle).second) continue;
-            auto potentialNeighbors = getPotentialNeighbors(triangle);
-            neighbors.insert(neighbors.end(), potentialNeighbors.begin(), potentialNeighbors.end());
+    void precomputeTriangleHashes(const std::vector<Cluster>& clusters) {
+        size_t totalTriangles = 0;
+        for (size_t clusterIndex = 0; clusterIndex < clusters.size(); ++clusterIndex) {
+            const Cluster& cluster = clusters[clusterIndex];
+            for (const Triangle& triangle : cluster.triangles) {
+                auto hashes = getTriangleHashes(triangle);
+                precomputedHashes[triangle] = hashes;
+                totalTriangles++;
+
+                for (const auto& h : hashes) {
+                    hashTable[h].emplace_back(IndexedTriangle{static_cast<int>(clusterIndex), triangle});
+                }
+            }
         }
 
-        std::sort(neighbors.begin(), neighbors.end());
-        neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), neighbors.end());
-
-        return neighbors;
     }
 
+    const std::unordered_map<Triangle, std::array<std::tuple<int, int, int>, 3>>& getAllPrecomputedHashes() const {
+        return precomputedHashes;
+    }
 
 
     void clear() {
@@ -447,52 +659,109 @@ public:
     }
 };
 
-void preprocessSpatialHash(const std::vector<Cluster>& clusters, SpatialHash& spatialHash) {
-    for (size_t clusterIndex = 0; clusterIndex < clusters.size(); ++clusterIndex) {
-        const Cluster& cluster = clusters[clusterIndex];
-        for (const Triangle& triangle : cluster.triangles) {
-            spatialHash.insert(triangle, clusterIndex);
-        }
-    }
-}
+    // std::vector<Triangle> getPotentialNeighbors(const Triangle& t) {
+    //     std::vector<Triangle> neighbors;
 
-std::vector<Triangle> getAdjacentTriangles(const Triangle& target, const std::vector<Triangle>& triangles) {
-    std::vector<Triangle> adjacentTriangles;
+    //     // Cache the hashes of vertices
+    //     std::array<std::tuple<int, int, int>, 3> hashes = {hash(t.vec1), hash(t.vec2), hash(t.vec3)};
+            
+    //     for (const auto& h : hashes) {
+    //         for (const auto& indexedTriangle : hashTable[h]) {
+    //             const Triangle& potentialNeighbor = indexedTriangle.triangle;
+    //             if (potentialNeighbor != t) {  // Exclude the triangle itself
+    //                 neighbors.push_back(potentialNeighbor);
+    //             }
+    //         }
+    //     }
 
-    for (const Triangle& triangle : triangles) {
-        if (areAdjacent(target, triangle)) {  // This function checks if two triangles share an edge or vertex
-            adjacentTriangles.push_back(triangle);
-        }
-    }
+    //     std::sort(neighbors.begin(), neighbors.end());
+    //     neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), neighbors.end());
 
-    return adjacentTriangles;
-}
+    //     return neighbors;
+    // }
 
-bool areTrianglesContiguous(const std::vector<Triangle>& triangles) {
-    if (triangles.empty()) return false;
+//original
+// double ATaTb(const Cluster& Ta, const Cluster& Tb, SpatialHash& spatialHash, const TriangleAdjacency& triangleAdjacency) {
+//     int count = 0;
 
-    std::unordered_set<Triangle> visited;
-    std::stack<Triangle> stack;
+//     // Convert Tb's triangles to a set for O(1) lookup
+//     std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
 
-    stack.push(triangles[0]);
+//     // For each triangle in Ta, check its potential neighbors
+//     for (const auto& ta_i : Ta.triangles) {
+//         auto potentialNeighbors = spatialHash.getPotentialNeighbors(ta_i);
+//         for (const auto& potentialNeighbor : potentialNeighbors) {
+//             // Only check adjacency if the potential neighbor is in Tb
+//             if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor, triangleAdjacency)) {
+//                 count++;
+//             }
+//         }
+//     }
 
-    while (!stack.empty()) {
-        Triangle current = stack.top();
-        stack.pop();
+//     double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
+//     return result;
+// }
 
-        if (visited.find(current) == visited.end()) {
-            visited.insert(current);
+double ATaTb(const Cluster& Ta, const Cluster& Tb, 
+             const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
+             const TriangleAdjacency& triangleAdjacency) {
+    int count = 0;
 
-            for (Triangle adjacent : getAdjacentTriangles(current, triangles)) {  
-                if (visited.find(adjacent) == visited.end()) {
-                    stack.push(adjacent);
-                }
+    // Convert Tb's triangles to a set for O(1) lookup
+    std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
+
+    // For each triangle in Ta, check its potential neighbors using the cache
+    for (const auto& ta_i : Ta.triangles) {
+        auto potentialNeighbors = potentialNeighborsCache.at(ta_i);
+        for (const auto& potentialNeighbor : potentialNeighbors) {
+            // Only check adjacency if the potential neighbor is in Tb
+            if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor, triangleAdjacency)) {
+                count++;
             }
         }
     }
 
-    return visited.size() == triangles.size();
+    double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
+    return result;
 }
+
+// std::vector<Triangle> getAdjacentTriangles(const Triangle& target, const std::vector<Triangle>& triangles) {
+//     std::vector<Triangle> adjacentTriangles;
+
+//     for (const Triangle& triangle : triangles) {
+//         if (areAdjacent(target, triangle)) {  // This function checks if two triangles share an edge or vertex
+//             adjacentTriangles.push_back(triangle);
+//         }
+//     }
+
+//     return adjacentTriangles;
+// }
+
+// bool areTrianglesContiguous(const std::vector<Triangle>& triangles) {
+//     if (triangles.empty()) return false;
+
+//     std::unordered_set<Triangle> visited;
+//     std::stack<Triangle> stack;
+
+//     stack.push(triangles[0]);
+
+//     while (!stack.empty()) {
+//         Triangle current = stack.top();
+//         stack.pop();
+
+//         if (visited.find(current) == visited.end()) {
+//             visited.insert(current);
+
+//             for (Triangle adjacent : getAdjacentTriangles(current, triangles)) {  
+//                 if (visited.find(adjacent) == visited.end()) {
+//                     stack.push(adjacent);
+//                 }
+//             }
+//         }
+//     }
+
+//     return visited.size() == triangles.size();
+// }
 
 void saveToOBJ(const std::vector<Cluster>& clusters, const std::string& filename) {
     std::ostringstream objStream;
@@ -539,174 +808,104 @@ void saveToOBJ(const std::vector<Cluster>& clusters, const std::string& filename
     mtlFile.close();
 }
 
-
-
-void saveTrianglesOnlyToOBJ(const std::vector<Triangle>& triangles, const std::string& filename) {
-    std::ostringstream objStream;
-
-    // Generate vertex and face data
-    for (const auto& triangle : triangles) {
-        objStream << "v " << triangle.vec1.x << " " << triangle.vec1.y << " " << triangle.vec1.z << "\n";
-        objStream << "v " << triangle.vec2.x << " " << triangle.vec2.y << " " << triangle.vec2.z << "\n";
-        objStream << "v " << triangle.vec3.x << " " << triangle.vec3.y << " " << triangle.vec3.z << "\n";
-    }
-    for (size_t i = 0; i < triangles.size(); ++i) {
-        size_t baseIdx = 1 + i * 3;
-        objStream << "f " << baseIdx << " " << (baseIdx + 1) << " " << (baseIdx + 2) << "\n";
-    }
-
-    // Check if there's an issue with the stream
-    if (objStream.fail()) {
-        std::cerr << "Error: Failed to write to the stream." << std::endl;
-        return;
-    }
-
-    // Open the .obj file and check if it opened correctly
-    std::ofstream objFile(filename + ".obj");
-    if (!objFile.is_open()) {
-        std::cerr << "Error: Unable to open file for writing: " << (filename + ".obj") << std::endl;
-        return;
-    }
-
-    // Write to the file, flush the stream, and then close it
-    objFile << objStream.str();
-    objFile.flush();
-    objFile.close();
-
-    // Print debug information
-    std::cout << "Saved " << triangles.size() << " triangles to " << (filename + ".obj") << std::endl;
-}
-
-
-
 // bool areAdjacent(const Triangle& t1, const Triangle& t2) {
-//     // Helper function to check if a triangle contains a vertex (Vector3D in this case)
-//     auto triangleContains = [](const Triangle& t, const Vector3D& v) {
-//         return t.vec1 == v || t.vec2 == v || t.vec3 == v;
-//     };
-
 //     if (t1 == t2) {
 //         return false;
 //     }
 
-//     // Check if the triangles share any vertices
+//     // Put vertices of t2 in a set for faster lookup
+//     std::unordered_set<Vector3D, Vector3DHash> t2Vertices = {t2.vec1, t2.vec2, t2.vec3};
+
+//     // Count the vertices of t1 that are in t2
 //     int sharedVerticesCount = 0;
-//     if (triangleContains(t2, t1.vec1)) {
-//         sharedVerticesCount++;
-//     }
-//     if (triangleContains(t2, t1.vec2)) {
-//         sharedVerticesCount++;
-//     }
-//     if (triangleContains(t2, t1.vec3)) {
-//         sharedVerticesCount++;
-//     }
+//     sharedVerticesCount += t2Vertices.count(t1.vec1);
+//     sharedVerticesCount += t2Vertices.count(t1.vec2);
+//     sharedVerticesCount += t2Vertices.count(t1.vec3);
 
 //     // If they share exactly two vertices, they are adjacent
-//     if (sharedVerticesCount == 2) {
-//         return true;
-//     } else {
-//         return false;
-//     }
+//     return sharedVerticesCount == 2;
 // }
 
-bool areAdjacent(const Triangle& t1, const Triangle& t2) {
-    if (t1 == t2) {
-        return false;
-    }
-
-    // Put vertices of t2 in a set for faster lookup
-    std::unordered_set<Vector3D, Vector3DHash> t2Vertices = {t2.vec1, t2.vec2, t2.vec3};
-
-    // Count the vertices of t1 that are in t2
-    int sharedVerticesCount = 0;
-    sharedVerticesCount += t2Vertices.count(t1.vec1);
-    sharedVerticesCount += t2Vertices.count(t1.vec2);
-    sharedVerticesCount += t2Vertices.count(t1.vec3);
-
-    // If they share exactly two vertices, they are adjacent
-    return sharedVerticesCount == 2;
-}
 
 
 
+// struct Component {
+//     std::vector<Triangle> triangles;
 
-struct Component {
-    std::vector<Triangle> triangles;
-
-    bool isValid() const {
-        // Check if triangles are contiguous
-        // This requires a function that checks if a group of triangles form a connected set
-        if (!areTrianglesContiguous(triangles)) {  // To be implemented
-            return false;
-        }
-        // Check other properties (iii and iv) if needed
-        return true;
-    }
+//     bool isValid() const {
+//         // Check if triangles are contiguous
+//         // This requires a function that checks if a group of triangles form a connected set
+//         if (!areTrianglesContiguous(triangles)) {  // To be implemented
+//             return false;
+//         }
+//         // Check other properties (iii and iv) if needed
+//         return true;
+//     }
     
-    double weight() const {
-        return 1.0 / (triangles.size() * triangles.size());
-    }
-};
+//     double weight() const {
+//         return 1.0 / (triangles.size() * triangles.size());
+//     }
+// };
 
-class Hull {
-private:
-    std::vector<Point_3> points;
-    Polyhedron P;
+// class Hull {
+// private:
+//     std::vector<Point_3> points;
+//     Polyhedron P;
 
-public:
+// public:
 
-    Hull(const Component& component) {
-        for (const Triangle& triangle : component.triangles) {
-            add(triangle);
-        }
-    }
+//     Hull(const Component& component) {
+//         for (const Triangle& triangle : component.triangles) {
+//             add(triangle);
+//         }
+//     }
 
 
-    // Add a triangle to the collection of points
-    void add(const Triangle& triangle) {
-        points.push_back(Point_3(triangle.vec1.x, triangle.vec1.y, triangle.vec1.z));
-        points.push_back(Point_3(triangle.vec2.x, triangle.vec2.y, triangle.vec2.z));
-        points.push_back(Point_3(triangle.vec3.x, triangle.vec3.y, triangle.vec3.z));
-    }
+//     // Add a triangle to the collection of points
+//     void add(const Triangle& triangle) {
+//         points.push_back(Point_3(triangle.vec1.x, triangle.vec1.y, triangle.vec1.z));
+//         points.push_back(Point_3(triangle.vec2.x, triangle.vec2.y, triangle.vec2.z));
+//         points.push_back(Point_3(triangle.vec3.x, triangle.vec3.y, triangle.vec3.z));
+//     }
 
-    // Compute the convex hull and store it in Polyhedron P
-    void computeHull() {
-        CGAL::convex_hull_3(points.begin(), points.end(), P);
-    }
+//     // Compute the convex hull and store it in Polyhedron P
+//     void computeHull() {
+//         CGAL::convex_hull_3(points.begin(), points.end(), P);
+//     }
 
-    double volume() const {
-        double total_volume = 0.0;
+//     double volume() const {
+//         double total_volume = 0.0;
 
-        for (auto facet = P.facets_begin(); facet != P.facets_end(); ++facet) {
-            auto h = facet->halfedge();
+//         for (auto facet = P.facets_begin(); facet != P.facets_end(); ++facet) {
+//             auto h = facet->halfedge();
             
-            Point_3 A = h->vertex()->point();
-            Point_3 B = h->next()->vertex()->point();
-            Point_3 C = h->opposite()->vertex()->point();
+//             Point_3 A = h->vertex()->point();
+//             Point_3 B = h->next()->vertex()->point();
+//             Point_3 C = h->opposite()->vertex()->point();
 
-            // Compute Q_F, we can take A as a point on face F
-            Point_3 Q_F = A;
+//             // Compute Q_F, we can take A as a point on face F
+//             Point_3 Q_F = A;
 
-            // Compute the normal of the face using the correct vector type
-            K::Vector_3 N_F = CGAL::normal(A, B, C);
+//             // Compute the normal of the face using the correct vector type
+//             K::Vector_3 N_F = CGAL::normal(A, B, C);
 
-            // Compute area of triangle
-            double areaF = std::sqrt(N_F.squared_length()) * 0.5;
-            N_F = N_F / std::sqrt(N_F.squared_length()); // Normalize the normal
+//             // Compute area of triangle
+//             double areaF = std::sqrt(N_F.squared_length()) * 0.5;
+//             N_F = N_F / std::sqrt(N_F.squared_length()); // Normalize the normal
 
-            total_volume += (Q_F - CGAL::ORIGIN) * N_F * areaF;
-        }
+//             total_volume += (Q_F - CGAL::ORIGIN) * N_F * areaF;
+//         }
 
-        return std::abs(total_volume) / 3.0;
-    }
+//         return std::abs(total_volume) / 3.0;
+//     }
 
-};
+// };
 
 
-double computeWeight(const Component& comp) {
-    int numTriangles = comp.triangles.size();
-    return 1.0 / (numTriangles * numTriangles);
-}
+// double computeWeight(const Component& comp) {
+//     int numTriangles = comp.triangles.size();
+//     return 1.0 / (numTriangles * numTriangles);
+// }
 
 double Stitj(const Triangle& ti, const Triangle& tj, const std::vector<double>& weights) {
     double wA = weights[0], wL = weights[1], wS = weights[2], wN = weights[3];
@@ -721,27 +920,6 @@ double Stitj(const Triangle& ti, const Triangle& tj, const std::vector<double>& 
     double normalDifference = wN * (1 - (ti.normal.x * tj.normal.x + ti.normal.y * tj.normal.y + ti.normal.z * tj.normal.z)) / 2.0;
 
     return areaDifference + maxLengthDifference + minLengthDifference + normalDifference;
-}
-
-double ATaTb(const Cluster& Ta, const Cluster& Tb, SpatialHash& spatialHash) {
-    int count = 0;
-
-    // Convert Tb's triangles to a set for O(1) lookup
-    std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
-
-    // For each triangle in Ta, check its potential neighbors
-    for (const auto& ta_i : Ta.triangles) {
-        auto potentialNeighbors = spatialHash.getPotentialNeighbors(ta_i);
-        for (const auto& potentialNeighbor : potentialNeighbors) {
-            // Only check adjacency if the potential neighbor is in Tb
-            if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor)) {
-                count++;
-            }
-        }
-    }
-
-    double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
-    return result;
 }
 
 
@@ -857,36 +1035,36 @@ bool isMoreSimilarToCluster(const Triangle& triangle, const Cluster& cluster1, c
 }
 
 
-Triangle chooseNextTriangleByHull(const std::vector<Component>& tempComponents, const std::vector<Triangle>& remainingTriangles) {
-    Triangle bestTriangle;
-    double bestScore = std::numeric_limits<double>::max();  // initialize with a high value
+// Triangle chooseNextTriangleByHull(const std::vector<Component>& tempComponents, const std::vector<Triangle>& remainingTriangles) {
+//     Triangle bestTriangle;
+//     double bestScore = std::numeric_limits<double>::max();  // initialize with a high value
 
-    for (const Triangle& triangle : remainingTriangles) {
-        std::vector<double> volumeChanges;
-        for (const Component& component : tempComponents) {
-            Hull originalHull(component);  // Create Hull using the component's triangles
-            Hull tempHull = originalHull;  // Copy the original hull to a temporary one
+//     for (const Triangle& triangle : remainingTriangles) {
+//         std::vector<double> volumeChanges;
+//         for (const Component& component : tempComponents) {
+//             Hull originalHull(component);  // Create Hull using the component's triangles
+//             Hull tempHull = originalHull;  // Copy the original hull to a temporary one
             
-            tempHull.add(triangle);
-            tempHull.computeHull(); // Compute the convex hull before calculating its volume
-            volumeChanges.push_back(std::abs(tempHull.volume() - originalHull.volume()));
-        }
+//             tempHull.add(triangle);
+//             tempHull.computeHull(); // Compute the convex hull before calculating its volume
+//             volumeChanges.push_back(std::abs(tempHull.volume() - originalHull.volume()));
+//         }
 
-        double meanVolumeChange = std::accumulate(volumeChanges.begin(), volumeChanges.end(), 0.0) / volumeChanges.size();
-        double variance = std::inner_product(volumeChanges.begin(), volumeChanges.end(), volumeChanges.begin(), 0.0) / volumeChanges.size() - meanVolumeChange * meanVolumeChange;
+//         double meanVolumeChange = std::accumulate(volumeChanges.begin(), volumeChanges.end(), 0.0) / volumeChanges.size();
+//         double variance = std::inner_product(volumeChanges.begin(), volumeChanges.end(), volumeChanges.begin(), 0.0) / volumeChanges.size() - meanVolumeChange * meanVolumeChange;
 
-        // Here you combine your volume change score and similarity measure.
-        // Adjust the weights as per your requirements.
-        double combinedScore = meanVolumeChange + variance;  // Just an example combination
+//         // Here you combine your volume change score and similarity measure.
+//         // Adjust the weights as per your requirements.
+//         double combinedScore = meanVolumeChange + variance;  // Just an example combination
 
-        if (combinedScore < bestScore) {
-            bestScore = combinedScore;
-            bestTriangle = triangle;
-        }
-    }
+//         if (combinedScore < bestScore) {
+//             bestScore = combinedScore;
+//             bestTriangle = triangle;
+//         }
+//     }
 
-    return bestTriangle;
-}
+//     return bestTriangle;
+// }
 
 
 bool isSimilarTriangle(const Triangle& triangle, const Cluster& cluster, const std::vector<double>& weights, double tau_S) {
@@ -903,149 +1081,149 @@ enum class SeedingResult {
     OVER_SEEDED
 };
 
-SeedingResult determineSeeding(const std::vector<Triangle>& seeds, const std::vector<Component>& components) {
-    size_t seedsFound = 0;
-    for (const auto& seed : seeds) {
-        for (const auto& component : components) {
-            if (std::find(component.triangles.begin(), component.triangles.end(), seed) != component.triangles.end()) {
-                seedsFound++;
-                break;
-            }
-        }
-    }
+// SeedingResult determineSeeding(const std::vector<Triangle>& seeds, const std::vector<Component>& components) {
+//     size_t seedsFound = 0;
+//     for (const auto& seed : seeds) {
+//         for (const auto& component : components) {
+//             if (std::find(component.triangles.begin(), component.triangles.end(), seed) != component.triangles.end()) {
+//                 seedsFound++;
+//                 break;
+//             }
+//         }
+//     }
 
-    if (seedsFound == seeds.size()) {
-        return SeedingResult::PERFECT;
-    } else if (seedsFound < seeds.size()) {
-        return SeedingResult::UNDER_SEEDED;
-    } else {
-        return SeedingResult::OVER_SEEDED;
-    }
-}
+//     if (seedsFound == seeds.size()) {
+//         return SeedingResult::PERFECT;
+//     } else if (seedsFound < seeds.size()) {
+//         return SeedingResult::UNDER_SEEDED;
+//     } else {
+//         return SeedingResult::OVER_SEEDED;
+//     }
+// }
 
-bool areComponentsSimilar(const Component& a, const Component& b, double similarityThreshold) {
-    Hull hullA(a);
-    Hull hullB(b);
+// bool areComponentsSimilar(const Component& a, const Component& b, double similarityThreshold) {
+//     Hull hullA(a);
+//     Hull hullB(b);
     
-    hullA.computeHull();
-    hullB.computeHull();
+//     hullA.computeHull();
+//     hullB.computeHull();
     
-    double volumeA = hullA.volume();
-    double volumeB = hullB.volume();
+//     double volumeA = hullA.volume();
+//     double volumeB = hullB.volume();
 
-    // Compare the volumes of the convex hulls of the two components
-    double relativeDifference = std::abs(volumeA - volumeB) / std::max(volumeA, volumeB);
-    return relativeDifference <= similarityThreshold;
-}
+//     // Compare the volumes of the convex hulls of the two components
+//     double relativeDifference = std::abs(volumeA - volumeB) / std::max(volumeA, volumeB);
+//     return relativeDifference <= similarityThreshold;
+// }
 
-void mergeSimilarComponents(std::vector<Component>& components, double similarityThreshold) {
-    for (size_t i = 0; i < components.size(); ++i) {
-        for (size_t j = i + 1; j < components.size();) {
-            if (areComponentsSimilar(components[i], components[j], similarityThreshold)) {  // This function needs to be implemented based on your criteria
-                components[i].triangles.insert(components[i].triangles.end(),
-                                               components[j].triangles.begin(),
-                                               components[j].triangles.end());
-                components.erase(components.begin() + j);
-            } else {
-                ++j;
-            }
-        }
-    }
-}
+// void mergeSimilarComponents(std::vector<Component>& components, double similarityThreshold) {
+//     for (size_t i = 0; i < components.size(); ++i) {
+//         for (size_t j = i + 1; j < components.size();) {
+//             if (areComponentsSimilar(components[i], components[j], similarityThreshold)) {  // This function needs to be implemented based on your criteria
+//                 components[i].triangles.insert(components[i].triangles.end(),
+//                                                components[j].triangles.begin(),
+//                                                components[j].triangles.end());
+//                 components.erase(components.begin() + j);
+//             } else {
+//                 ++j;
+//             }
+//         }
+//     }
+// }
 
-bool recursiveBacktracking(const std::vector<Triangle>& remainingTriangles, std::vector<Component>& solution, const std::vector<double>& weights, double tau_S, int depth = 0, const int MAX_DEPTH = 3) {
-    if (depth > MAX_DEPTH) {
-        return false;  // Maximum depth reached without a solution.
-    }
+// bool recursiveBacktracking(const std::vector<Triangle>& remainingTriangles, std::vector<Component>& solution, const std::vector<double>& weights, double tau_S, int depth = 0, const int MAX_DEPTH = 3) {
+//     if (depth > MAX_DEPTH) {
+//         return false;  // Maximum depth reached without a solution.
+//     }
 
-    if (remainingTriangles.empty()) {
-        return true;  // Found a solution.
-    }
+//     if (remainingTriangles.empty()) {
+//         return true;  // Found a solution.
+//     }
 
-    for (const Triangle& triangle : remainingTriangles) {
-        for (Component& component : solution) {
-            Cluster tempCluster = {component.triangles};
-            if (isSimilarTriangle(triangle, tempCluster, weights, tau_S)) {
-                component.triangles.push_back(triangle);
-                std::vector<Triangle> newRemaining = remainingTriangles;
-                newRemaining.erase(std::remove(newRemaining.begin(), newRemaining.end(), triangle), newRemaining.end());
-                if (recursiveBacktracking(newRemaining, solution, weights, tau_S, depth + 1)) {
-                    return true;
-                }
-                component.triangles.pop_back();
-            }
-        }
-    }
+//     for (const Triangle& triangle : remainingTriangles) {
+//         for (Component& component : solution) {
+//             Cluster tempCluster = {component.triangles};
+//             if (isSimilarTriangle(triangle, tempCluster, weights, tau_S)) {
+//                 component.triangles.push_back(triangle);
+//                 std::vector<Triangle> newRemaining = remainingTriangles;
+//                 newRemaining.erase(std::remove(newRemaining.begin(), newRemaining.end(), triangle), newRemaining.end());
+//                 if (recursiveBacktracking(newRemaining, solution, weights, tau_S, depth + 1)) {
+//                     return true;
+//                 }
+//                 component.triangles.pop_back();
+//             }
+//         }
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 
-std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster) {
-    std::vector<Component> components;
-    std::vector<Triangle> remainingTriangles = cluster.triangles;
+// std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster) {
+//     std::vector<Component> components;
+//     std::vector<Triangle> remainingTriangles = cluster.triangles;
     
-    int iteration = 1; // To keep track of iterations
+//     int iteration = 1; // To keep track of iterations
     
-    while (!remainingTriangles.empty()) {
-        std::cout << "Iteration " << iteration++ << std::endl;
+//     while (!remainingTriangles.empty()) {
+//         std::cout << "Iteration " << iteration++ << std::endl;
         
-        // Seed with the largest disjoint similar triangles
-        std::vector<Triangle> seeds = findLargestDisjointSimilarTriangles(remainingTriangles);
-        std::cout << "Number of seeds found: " << seeds.size() << std::endl;
+//         // Seed with the largest disjoint similar triangles
+//         std::vector<Triangle> seeds = findLargestDisjointSimilarTriangles(remainingTriangles);
+//         std::cout << "Number of seeds found: " << seeds.size() << std::endl;
         
-        SeedingResult seedingResult = determineSeeding(seeds, components);
-        std::vector<Component> tempComponents(seeds.size());
-        for (size_t i = 0; i < seeds.size(); i++) {
-            tempComponents[i].triangles.push_back(seeds[i]);
-            remainingTriangles.erase(std::remove(remainingTriangles.begin(), remainingTriangles.end(), seeds[i]), remainingTriangles.end());
-        }
+//         SeedingResult seedingResult = determineSeeding(seeds, components);
+//         std::vector<Component> tempComponents(seeds.size());
+//         for (size_t i = 0; i < seeds.size(); i++) {
+//             tempComponents[i].triangles.push_back(seeds[i]);
+//             remainingTriangles.erase(std::remove(remainingTriangles.begin(), remainingTriangles.end(), seeds[i]), remainingTriangles.end());
+//         }
 
-        bool canGrow = true;
-        int backtrackSteps = 0;
-        const int MAX_BACKTRACK = 3;
+//         bool canGrow = true;
+//         int backtrackSteps = 0;
+//         const int MAX_BACKTRACK = 3;
 
-        while (canGrow && backtrackSteps < MAX_BACKTRACK) {
-            canGrow = false;
-            int grownTriangles = 0;
-            for (auto& component : tempComponents) {
-                Triangle nextTriangle = chooseNextTriangleByHull(tempComponents, remainingTriangles);
-                if (nextTriangle.isValid()) {
-                    component.triangles.push_back(nextTriangle);
-                    remainingTriangles.erase(std::remove(remainingTriangles.begin(), remainingTriangles.end(), nextTriangle), remainingTriangles.end());
-                    canGrow = true;
-                    grownTriangles++;
-                } else {
-                    // If unable to grow, we might need to backtrack
-                    if (!component.triangles.empty()) {
-                        remainingTriangles.push_back(component.triangles.back());
-                        component.triangles.pop_back();
-                        backtrackSteps++;
-                    }
-                }
-            }
-            std::cout << "Grown triangles in this step: " << grownTriangles << std::endl;
-        }
-        std::cout << "Total backtracks in this iteration: " << backtrackSteps << std::endl;
+//         while (canGrow && backtrackSteps < MAX_BACKTRACK) {
+//             canGrow = false;
+//             int grownTriangles = 0;
+//             for (auto& component : tempComponents) {
+//                 Triangle nextTriangle = chooseNextTriangleByHull(tempComponents, remainingTriangles);
+//                 if (nextTriangle.isValid()) {
+//                     component.triangles.push_back(nextTriangle);
+//                     remainingTriangles.erase(std::remove(remainingTriangles.begin(), remainingTriangles.end(), nextTriangle), remainingTriangles.end());
+//                     canGrow = true;
+//                     grownTriangles++;
+//                 } else {
+//                     // If unable to grow, we might need to backtrack
+//                     if (!component.triangles.empty()) {
+//                         remainingTriangles.push_back(component.triangles.back());
+//                         component.triangles.pop_back();
+//                         backtrackSteps++;
+//                     }
+//                 }
+//             }
+//             std::cout << "Grown triangles in this step: " << grownTriangles << std::endl;
+//         }
+//         std::cout << "Total backtracks in this iteration: " << backtrackSteps << std::endl;
 
-        // Merge valid grown components
-        int validComponentsCount = 0;
-        for (const auto& comp : tempComponents) {
-            if (comp.isValid()) {
-                components.push_back(comp);
-                validComponentsCount++;
-            }
-        }
-        std::cout << "Valid components in this iteration: " << validComponentsCount << std::endl;
-    }
+//         // Merge valid grown components
+//         int validComponentsCount = 0;
+//         for (const auto& comp : tempComponents) {
+//             if (comp.isValid()) {
+//                 components.push_back(comp);
+//                 validComponentsCount++;
+//             }
+//         }
+//         std::cout << "Valid components in this iteration: " << validComponentsCount << std::endl;
+//     }
 
-    double similarityThreshold = 0.9;  // or your desired threshold
-    mergeSimilarComponents(components, similarityThreshold);
+//     double similarityThreshold = 0.9;  // or your desired threshold
+//     mergeSimilarComponents(components, similarityThreshold);
 
-    std::cout << "Total components after merging: " << components.size() << std::endl;
+//     std::cout << "Total components after merging: " << components.size() << std::endl;
 
-    return components;
-}
+//     return components;
+// }
 
 
 Vector3D HSVtoRGB(float H, float S, float V) {
@@ -1087,44 +1265,33 @@ Vector3D HSVtoRGB(float H, float S, float V) {
     return color;
 }
 
-int countAdjacentTriangles(const Cluster& Ta, const Cluster& Tb) {
-    int count = 0;
-    for (const auto& triangleA : Ta.triangles) {
-        for (const auto& triangleB : Tb.triangles) {
-            if (areAdjacent(triangleA, triangleB)) {
-                count++;
-            }
-        }
-    }
-    return count;
-}
-
-bool isTriangleAdjacentToCluster(const Triangle& triangle, const Cluster& cluster) {
-    for (const auto& t : cluster.triangles) {
-        if (areAdjacent(triangle, t)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
     int iteration = 0;
-
     SpatialHash spatialHash(0.1);
-    preprocessSpatialHash(clusters, spatialHash);
+    auto start = std::chrono::high_resolution_clock::now();
+    spatialHash.precomputeTriangleHashes(clusters);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
 
-    while (true) {
+    std::cout << "Time taken for precomputeTriangleHashes: " << elapsed.count() << " seconds" << std::endl;
+
+    // 1. Initialize the TriangleAdjacency object
+    TriangleAdjacency triangleAdjacency;
+    for (const auto& cluster : clusters) {
+        for (const auto& triangle : cluster.triangles) {
+            triangleAdjacency.addTriangle(triangle);
+        }
+    }
+
+    while (iteration < 1) {
         std::cout << "Starting iteration " << iteration << " with " << clusters.size() << " clusters." << std::endl;
 
-        auto startTime = std::chrono::high_resolution_clock::now();
         int mergesInThisIteration = 0;
         int splitsInThisIteration = 0;
         size_t pairsProcessed = 0;  // Initialize counter for this iteration
 
         // Declare a variable to accumulate the total time for the specific loop
         std::chrono::milliseconds totalLoopTime(0);
-
 
         // std::map<size_t, std::vector<Triangle>> mergeMap;
         std::map<size_t, std::unordered_set<Triangle>> mergeMap; // Change to unordered_set
@@ -1133,11 +1300,20 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         for (size_t i = 0; i < clusters.size(); ++i) {
             
             if (clusters[i].triangles.empty() || processedClusters.count(i)) continue;
+            std::unordered_set<Triangle> clusterITriangles(clusters[i].triangles.begin(), clusters[i].triangles.end());
+        
 
             std::unordered_set<int> neighboringClusterIndices = spatialHash.getNeighboringClustersForCluster(clusters[i]);
             std::vector<int> neighboringClusterIndicesVec(neighboringClusterIndices.begin(), neighboringClusterIndices.end());
+            // std::cout << "Cluster " << i << " has " << neighboringClusterIndices.size() << " neighboring clusters." << std::endl;
             auto mergeStartTime = std::chrono::high_resolution_clock::now();
             
+            std::unordered_map<Triangle, std::vector<Triangle>> potentialNeighborsCache;
+
+            for (const auto& triangleA : clusters[i].triangles) {
+                potentialNeighborsCache[triangleA] = spatialHash.getPotentialNeighbors(triangleA);
+            }
+
             #pragma omp parallel for
             for (size_t idx = 0; idx < neighboringClusterIndicesVec.size(); ++idx) {
                 int j = neighboringClusterIndicesVec[idx];
@@ -1146,23 +1322,28 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                 bool shouldMerge = false;
                 std::vector<Triangle> localMergeList;
 
-                double similarity = ATaTb(clusters[i], clusters[j], spatialHash);
+                double similarity = ATaTb(clusters[i], clusters[j], potentialNeighborsCache, triangleAdjacency);
+
                 if (similarity >= tau_N) {
                     for (const auto& triangleA : clusters[i].triangles) {
-                        auto potentialNeighborsForA = spatialHash.getPotentialNeighbors(triangleA);
+                        auto potentialNeighborsForA = potentialNeighborsCache[triangleA];
+
                         for (const auto& triangleB : potentialNeighborsForA) {
-                            if (triangleA.isAdjacent(triangleB)) {
+                            bool isAdjacentResult = triangleA.isAdjacent(triangleB, triangleAdjacency);
+                            if (clusterITriangles.count(triangleB) && isAdjacentResult) {
                                 localMergeList.push_back(triangleA);
                                 shouldMerge = true;
+                                break;
                             }
                         }
+
+                        if (shouldMerge) break;
                     }
                 }
 
-                #pragma omp critical
-                {
-                    if (shouldMerge) {
-                        // mergeMap[j].insert(mergeMap[j].end(), localMergeList.begin(), localMergeList.end());
+                if (shouldMerge) {
+                    #pragma omp critical
+                    {
                         mergeMap[j].insert(localMergeList.begin(), localMergeList.end());
                         mergesInThisIteration += localMergeList.size();
                         processedClusters.insert(i);
@@ -1173,9 +1354,8 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             auto mergeEndTime = std::chrono::high_resolution_clock::now();  // End timing for the specific loop
             totalLoopTime += std::chrono::duration_cast<std::chrono::milliseconds>(mergeEndTime - mergeStartTime);  // Accumulate the time
         }
-
+        
         std::cout << "Time spent in the specific loop for iteration " << iteration << ": " << totalLoopTime.count() << " milliseconds." << std::endl;
-
         std :: cout << "BLAAAAAAAAAAAAAAH" << std::endl;
         
         // Perform merges
@@ -1217,6 +1397,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             }
         }
 
+
         std::cout << "After " << iteration << " iterations, merged " << mergesInThisIteration << " triangles and split " << splitsInThisIteration << " triangles." << std::endl;
         clusters.insert(clusters.end(), newClusters.begin(), newClusters.end());
 
@@ -1225,27 +1406,17 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             [](const Cluster& cluster) { return cluster.triangles.empty(); }),
         clusters.end());
 
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-        std::cout << "Iteration " << iteration << " took " << duration << " milliseconds." << std::endl;
-
         if (mergeMap.empty() && newClusters.empty()) {
             std::cout << "No merges or splits detected. Exiting refinement loop." << std::endl;
             break;
         }
 
         spatialHash.clear();
-        preprocessSpatialHash(clusters, spatialHash);
+        spatialHash.precomputeTriangleHashes(clusters);
         iteration++;
     }
+
 }
-
-
-
-
-
-
-
 
 
 std::vector<Cluster> createSearchSpaces(const std::vector<Triangle>& triangles, const std::vector<double>& weights, double tau_S) {
@@ -1326,6 +1497,7 @@ std::vector<Cluster> createSearchSpaces(const std::vector<Triangle>& triangles, 
 
 
 void testSpatialHash(const std::vector<Triangle>& triangles) {
+
     SpatialHash spatialHash(1);  // Assuming 1 is the cell size you want
 
     // Ensure there are at least 3 triangles for the test
@@ -1335,7 +1507,9 @@ void testSpatialHash(const std::vector<Triangle>& triangles) {
     }
 
     // Use the first 3 triangles for the test
+    std::cout << "Before triangle 1 assignment" << std::endl;
     Triangle t1 = triangles[0];
+    std::cout << "After triangle 1 assignment" << std::endl;
     Triangle t2 = triangles[1];
     Triangle t3 = triangles[2];
 
@@ -1411,10 +1585,6 @@ int main() {
         // std::cout << "Reading Vertex: (" << attrib.vertices[i] << "," << attrib.vertices[i + 1] << "," << attrib.vertices[i + 2] << ")" << std::endl;
         allVertices.push_back(v);
     }
-    
-    // for (int i = 0; i < 10 && i < allVertices.size(); i++) {
-    //     std::cout << "Vertex " << i << ": (" << allVertices[i].x << ", " << allVertices[i].y << ", " << allVertices[i].z << ")" << std::endl;
-    // }
 
     // Instead of converting vertices to Triangle structures, we will simply store their indices for writing back.
     std::vector<TriangleIndices> allTriangleIndices;
@@ -1544,51 +1714,4 @@ int main() {
     std::cout << "Program completed successfully." << std::endl;
 
     return 0;
-}
-
-
-void saveToPLY(const std::vector<Cluster>& clusters, const std::string& filename) {
-    std::ostringstream plyStream;
-
-    // Count total vertices and faces
-    size_t totalVertices = clusters.size() * 3;  // 3 vertices per triangle
-    size_t totalFaces = clusters.size();  // assuming one triangle per cluster for simplicity
-
-    // PLY header
-    plyStream << "ply\n";
-    plyStream << "format ascii 1.0\n";
-    plyStream << "element vertex " << totalVertices << "\n";
-    plyStream << "property float x\n";
-    plyStream << "property float y\n";
-    plyStream << "property float z\n";
-    plyStream << "property uchar red\n";  // Vertex color
-    plyStream << "property uchar green\n";  // Vertex color
-    plyStream << "property uchar blue\n";  // Vertex color
-    plyStream << "element face " << totalFaces << "\n";
-    plyStream << "property list uchar int vertex_index\n";
-    plyStream << "end_header\n";
-
-    // Write vertices with colors
-    size_t vertexIndex = 0;
-    for (const auto& cluster : clusters) {
-        for (const auto& triangle : cluster.triangles) {
-            Vector3D color = triangle.color;
-            plyStream << triangle.vec1.x << " " << triangle.vec1.y << " " << triangle.vec1.z << " " 
-                      << static_cast<int>(color.x * 255) << " " << static_cast<int>(color.y * 255) << " " << static_cast<int>(color.z * 255) << "\n";
-            plyStream << triangle.vec2.x << " " << triangle.vec2.y << " " << triangle.vec2.z << " " 
-                      << static_cast<int>(color.x * 255) << " " << static_cast<int>(color.y * 255) << " " << static_cast<int>(color.z * 255) << "\n";
-            plyStream << triangle.vec3.x << " " << triangle.vec3.y << " " << triangle.vec3.z << " " 
-                      << static_cast<int>(color.x * 255) << " " << static_cast<int>(color.y * 255) << " " << static_cast<int>(color.z * 255) << "\n";
-        }
-    }
-
-    // Write faces
-    for (size_t i = 0; i < totalFaces; ++i) {
-        plyStream << "3 " << (i*3) << " " << (i*3 + 1) << " " << (i*3 + 2) << "\n";
-    }
-
-    // Save to file
-    std::ofstream plyFile(filename + ".ply");
-    plyFile << plyStream.str();
-    plyFile.close();
 }
