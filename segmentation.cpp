@@ -123,6 +123,17 @@ struct Vector3DHash {
     }
 };
 
+namespace std {
+    template <>
+    struct hash<Vector3D> {
+        std::size_t operator()(const Vector3D& vec) const {
+            Vector3DHash hasher;
+            return hasher(vec);
+        }
+    };
+}
+
+
 
 class Vertex {
 public:
@@ -218,10 +229,24 @@ public:
     std::string toString() const;  // Added toString() method
 };
 
+namespace std {
+    template <>
+    struct hash<Triangle> {
+        size_t operator()(const Triangle& t) const {
+            std::hash<Vector3D> vertexHasher;
+            size_t h1 = vertexHasher(t.vec1);
+            size_t h2 = vertexHasher(t.vec2);
+            size_t h3 = vertexHasher(t.vec3);
+            return h1 ^ (h2 << 1) ^ (h3 << 2);  // or use boost::hash_combine (better)
+        }
+    };
+}
+
 class TriangleAdjacency {
 private:
     typedef TriangleEdge Edge;
-    std::unordered_map<Edge, std::vector<Triangle>, EdgeHash> adjacencyMap;
+    std::unordered_map<Edge, std::unordered_set<Triangle>, EdgeHash> adjacencyMap;
+
 
 public:
     void addTriangle(const Triangle& triangle);
@@ -292,7 +317,7 @@ void TriangleAdjacency::addTriangle(const Triangle& triangle) {
     };
 
     for (const TriangleEdge& edge : edges) {
-        adjacencyMap[edge].push_back(triangle);
+        adjacencyMap[edge].insert(triangle);
     }
 }
 
@@ -304,15 +329,13 @@ bool TriangleAdjacency::isAdjacent(const Triangle& t1, const Triangle& t2) const
     };
 
     for (const TriangleEdge& edge : edges) {
-        if (adjacencyMap.count(edge)) {
-            const auto& triangles = adjacencyMap.at(edge);
-            if (std::find(triangles.begin(), triangles.end(), t2) != triangles.end()) {
-                return true;
-            }
+        if (adjacencyMap.count(edge) && adjacencyMap.at(edge).count(t2)) {
+            return true;
         }
     }
     return false;
 }
+
 
 
 
@@ -466,26 +489,6 @@ std::vector<Triangle> indicesToTriangles(const std::vector<TriangleIndices>& ind
 }
 
 
-struct TriangleHash {
-    std::size_t operator()(const Triangle& t) const {
-        std::hash<Vertex> vertexHasher;
-        size_t h1 = vertexHasher(t.vec1);
-        size_t h2 = vertexHasher(t.vec2);
-        size_t h3 = vertexHasher(t.vec3);
-        return h1 ^ (h2 << 1) ^ (h3 << 2);  // or use boost::hash_combine (better)
-        }
-};
-
-namespace std {
-    template <>
-    struct hash<Triangle> {
-        std::size_t operator()(const Triangle& t) const {
-            TriangleHash triangleHasher;
-            return triangleHasher(t);
-        }
-    };
-}
-
 struct Cluster {
     std::vector<Triangle> triangles;
 
@@ -524,6 +527,7 @@ private:
     double invCellSize;  // Reciprocal of cellSize for optimization
     std::unordered_map<std::tuple<int, int, int>, std::vector<IndexedTriangle>, TupleHash> hashTable;
     std::unordered_map<Triangle, std::array<std::tuple<int, int, int>, 3>> precomputedHashes;
+    std::unordered_map<Triangle, std::vector<Triangle>> precomputedNeighbors;
 
     std::tuple<int, int, int> hash(const Vector3D& vec) {
         int x = static_cast<int>(std::floor(vec.x * invCellSize));
@@ -649,8 +653,8 @@ public:
 
     }
 
-    const std::unordered_map<Triangle, std::array<std::tuple<int, int, int>, 3>>& getAllPrecomputedHashes() const {
-        return precomputedHashes;
+    void precomputeTriangleNeighbors(const Triangle& triangle) {
+        precomputedNeighbors[triangle] = getPotentialNeighbors(triangle);
     }
 
 
@@ -702,19 +706,40 @@ public:
 //     return result;
 // }
 
+// double ATaTb(const Cluster& Ta, const Cluster& Tb, 
+//              const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
+//              const TriangleAdjacency& triangleAdjacency) {
+//     int count = 0;
+
+//     // Convert Tb's triangles to a set for O(1) lookup
+//     std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
+
+//     // For each triangle in Ta, check its potential neighbors using the cache
+//     for (const auto& ta_i : Ta.triangles) {
+//         auto potentialNeighbors = potentialNeighborsCache.at(ta_i);  // Use the passed-in cache
+//         for (const auto& potentialNeighbor : potentialNeighbors) {
+//             // Only check adjacency if the potential neighbor is in Tb
+//             if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor, triangleAdjacency)) {
+//                 count++;
+//             }
+//         }
+//     }
+
+//     double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
+//     return result;
+// }
+
 double ATaTb(const Cluster& Ta, const Cluster& Tb, 
              const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
-             const TriangleAdjacency& triangleAdjacency) {
+             const TriangleAdjacency& triangleAdjacency,
+             const std::unordered_set<Triangle>& tbTriangles) {  // <-- Added this
     int count = 0;
 
-    // Convert Tb's triangles to a set for O(1) lookup
-    std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
+    // No longer converting Tb's triangles to a set here since we're passing it as a parameter
 
-    // For each triangle in Ta, check its potential neighbors using the cache
     for (const auto& ta_i : Ta.triangles) {
         auto potentialNeighbors = potentialNeighborsCache.at(ta_i);
         for (const auto& potentialNeighbor : potentialNeighbors) {
-            // Only check adjacency if the potential neighbor is in Tb
             if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor, triangleAdjacency)) {
                 count++;
             }
@@ -724,6 +749,9 @@ double ATaTb(const Cluster& Ta, const Cluster& Tb,
     double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
     return result;
 }
+
+
+
 
 // std::vector<Triangle> getAdjacentTriangles(const Triangle& target, const std::vector<Triangle>& triangles) {
 //     std::vector<Triangle> adjacentTriangles;
@@ -1283,7 +1311,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         }
     }
 
-    while (iteration < 1) {
+    while (true) {
         std::cout << "Starting iteration " << iteration << " with " << clusters.size() << " clusters." << std::endl;
 
         int mergesInThisIteration = 0;
@@ -1296,18 +1324,15 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         // std::map<size_t, std::vector<Triangle>> mergeMap;
         std::map<size_t, std::unordered_set<Triangle>> mergeMap; // Change to unordered_set
         std::set<size_t> processedClusters;
-        
-        for (size_t i = 0; i < clusters.size(); ++i) {
-            
-            if (clusters[i].triangles.empty() || processedClusters.count(i)) continue;
-            std::unordered_set<Triangle> clusterITriangles(clusters[i].triangles.begin(), clusters[i].triangles.end());
-        
 
+        for (size_t i = 0; i < clusters.size(); ++i) {
+            if (clusters[i].triangles.empty() || processedClusters.count(i)) continue;
+
+            std::unordered_set<Triangle> clusterITriangles(clusters[i].triangles.begin(), clusters[i].triangles.end());
             std::unordered_set<int> neighboringClusterIndices = spatialHash.getNeighboringClustersForCluster(clusters[i]);
             std::vector<int> neighboringClusterIndicesVec(neighboringClusterIndices.begin(), neighboringClusterIndices.end());
-            // std::cout << "Cluster " << i << " has " << neighboringClusterIndices.size() << " neighboring clusters." << std::endl;
+
             auto mergeStartTime = std::chrono::high_resolution_clock::now();
-            
             std::unordered_map<Triangle, std::vector<Triangle>> potentialNeighborsCache;
 
             for (const auto& triangleA : clusters[i].triangles) {
@@ -1322,8 +1347,11 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                 bool shouldMerge = false;
                 std::vector<Triangle> localMergeList;
 
-                double similarity = ATaTb(clusters[i], clusters[j], potentialNeighborsCache, triangleAdjacency);
+                // Create the unordered_set for clusters[j].triangles
+                std::unordered_set<Triangle> tbTriangles(clusters[j].triangles.begin(), clusters[j].triangles.end());
 
+                double similarity = ATaTb(clusters[i], clusters[j], potentialNeighborsCache, triangleAdjacency, tbTriangles);
+                // End Timing
                 if (similarity >= tau_N) {
                     for (const auto& triangleA : clusters[i].triangles) {
                         auto potentialNeighborsForA = potentialNeighborsCache[triangleA];
@@ -1351,12 +1379,11 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                     }
                 }
             }
-            auto mergeEndTime = std::chrono::high_resolution_clock::now();  // End timing for the specific loop
-            totalLoopTime += std::chrono::duration_cast<std::chrono::milliseconds>(mergeEndTime - mergeStartTime);  // Accumulate the time
+            auto mergeEndTime = std::chrono::high_resolution_clock::now();
+            totalLoopTime += std::chrono::duration_cast<std::chrono::milliseconds>(mergeEndTime - mergeStartTime);
         }
         
         std::cout << "Time spent in the specific loop for iteration " << iteration << ": " << totalLoopTime.count() << " milliseconds." << std::endl;
-        std :: cout << "BLAAAAAAAAAAAAAAH" << std::endl;
         
         // Perform merges
         for (auto& [clusterIndex, trianglesToMerge] : mergeMap) {
@@ -1382,8 +1409,6 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                     if (!splitCluster.triangles.empty()) {
                         #pragma omp critical
                         {
-                            // std::cout << "Triangle from cluster " << i << " not found in merge list. Considering for split." << std::endl;
-                            // std::cout << "Splitting cluster " << i << " with " << splitCluster.triangles.size() << " triangles." << std::endl;
                             splitsInThisIteration += splitCluster.triangles.size();
                         }
                         localNewClusters.push_back(splitCluster);
