@@ -1321,8 +1321,8 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         // Declare a variable to accumulate the total time for the specific loop
         std::chrono::milliseconds totalLoopTime(0);
 
-        // std::map<size_t, std::vector<Triangle>> mergeMap;
-        std::map<size_t, std::unordered_set<Triangle>> mergeMap; // Change to unordered_set
+        std::map<std::pair<size_t, size_t>, std::vector<Triangle>> mergeMap;
+        std::map<std::pair<size_t, size_t>, std::vector<Triangle>> splitMap;
         std::set<size_t> processedClusters;
 
         for (size_t i = 0; i < clusters.size(); ++i) {
@@ -1355,7 +1355,6 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                 if (similarity >= tau_N) {
                     for (const auto& triangleA : clusters[i].triangles) {
                         auto potentialNeighborsForA = potentialNeighborsCache[triangleA];
-
                         for (const auto& triangleB : potentialNeighborsForA) {
                             bool isAdjacentResult = triangleA.isAdjacent(triangleB, triangleAdjacency);
                             if (clusterITriangles.count(triangleB) && isAdjacentResult) {
@@ -1363,19 +1362,21 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                                 shouldMerge = true;
                                 break;
                             }
+                            // Check the reverse: triangles from cluster j adjacent to those in cluster i
+                            if (tbTriangles.count(triangleA) && isAdjacentResult) {
+                                localMergeList.push_back(triangleB);
+                                shouldMerge = true;
+                                break;
+                            }
                         }
-
                         if (shouldMerge) break;
                     }
                 }
-
                 if (shouldMerge) {
                     #pragma omp critical
                     {
-                        mergeMap[j].insert(localMergeList.begin(), localMergeList.end());
+                        mergeMap[{i, j}].insert(mergeMap[{i, j}].end(), localMergeList.begin(), localMergeList.end());
                         mergesInThisIteration += localMergeList.size();
-                        processedClusters.insert(i);
-                        processedClusters.insert(j);
                     }
                 }
             }
@@ -1383,59 +1384,30 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             totalLoopTime += std::chrono::duration_cast<std::chrono::milliseconds>(mergeEndTime - mergeStartTime);
         }
         
-        std::cout << "Time spent in the specific loop for iteration " << iteration << ": " << totalLoopTime.count() << " milliseconds." << std::endl;
-        
-        // Perform merges
-        for (auto& [clusterIndex, trianglesToMerge] : mergeMap) {
-            clusters[clusterIndex].triangles.insert(clusters[clusterIndex].triangles.end(), trianglesToMerge.begin(), trianglesToMerge.end());
-        }
+        for (auto& entry : mergeMap) {
+            auto& keyPair = entry.first;
+            auto& trianglesToMerge = entry.second;
 
-        // Handle Splits
-        std::list<Cluster> newClusters;
+            size_t sourceClusterIndex = keyPair.first;
+            size_t targetClusterIndex = keyPair.second;
 
-        #pragma omp parallel
-        {
-            std::list<Cluster> localNewClusters;
+            // Combine triangles from both clusters
+            clusters[targetClusterIndex].triangles.insert(clusters[targetClusterIndex].triangles.end(), trianglesToMerge.begin(), trianglesToMerge.end());
 
-            #pragma omp for nowait
-            for (size_t i = 0; i < clusters.size(); ++i) {
-                if (mergeMap.count(i)) {
-                    Cluster splitCluster;
-                    for (const auto& triangle : clusters[i].triangles) {
-                        if (mergeMap[i].find(triangle) == mergeMap[i].end()) { // Use find method
-                            splitCluster.triangles.push_back(triangle);
-                        }
-                    }
-                    if (!splitCluster.triangles.empty()) {
-                        #pragma omp critical
-                        {
-                            splitsInThisIteration += splitCluster.triangles.size();
-                        }
-                        localNewClusters.push_back(splitCluster);
-                    }
-                }
-            }
-
-            #pragma omp critical
-            {
-                newClusters.splice(newClusters.end(), localNewClusters);
+            // Remove triangles from the source cluster
+            for (const auto& triangle : trianglesToMerge) {
+                clusters[sourceClusterIndex].triangles.erase(std::remove(clusters[sourceClusterIndex].triangles.begin(), clusters[sourceClusterIndex].triangles.end(), triangle), clusters[sourceClusterIndex].triangles.end());
             }
         }
-
 
         std::cout << "After " << iteration << " iterations, merged " << mergesInThisIteration << " triangles and split " << splitsInThisIteration << " triangles." << std::endl;
-        clusters.insert(clusters.end(), newClusters.begin(), newClusters.end());
+        // clusters.insert(clusters.end(), newClusters.begin(), newClusters.end());
 
         // Remove empty clusters after merges and splits
         clusters.erase(std::remove_if(clusters.begin(), clusters.end(),
             [](const Cluster& cluster) { return cluster.triangles.empty(); }),
         clusters.end());
-
-        if (mergeMap.empty() && newClusters.empty()) {
-            std::cout << "No merges or splits detected. Exiting refinement loop." << std::endl;
-            break;
-        }
-
+        
         spatialHash.clear();
         spatialHash.precomputeTriangleHashes(clusters);
         iteration++;
