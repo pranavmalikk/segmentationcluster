@@ -663,72 +663,6 @@ public:
     }
 };
 
-    // std::vector<Triangle> getPotentialNeighbors(const Triangle& t) {
-    //     std::vector<Triangle> neighbors;
-
-    //     // Cache the hashes of vertices
-    //     std::array<std::tuple<int, int, int>, 3> hashes = {hash(t.vec1), hash(t.vec2), hash(t.vec3)};
-            
-    //     for (const auto& h : hashes) {
-    //         for (const auto& indexedTriangle : hashTable[h]) {
-    //             const Triangle& potentialNeighbor = indexedTriangle.triangle;
-    //             if (potentialNeighbor != t) {  // Exclude the triangle itself
-    //                 neighbors.push_back(potentialNeighbor);
-    //             }
-    //         }
-    //     }
-
-    //     std::sort(neighbors.begin(), neighbors.end());
-    //     neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), neighbors.end());
-
-    //     return neighbors;
-    // }
-
-//original
-// double ATaTb(const Cluster& Ta, const Cluster& Tb, SpatialHash& spatialHash, const TriangleAdjacency& triangleAdjacency) {
-//     int count = 0;
-
-//     // Convert Tb's triangles to a set for O(1) lookup
-//     std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
-
-//     // For each triangle in Ta, check its potential neighbors
-//     for (const auto& ta_i : Ta.triangles) {
-//         auto potentialNeighbors = spatialHash.getPotentialNeighbors(ta_i);
-//         for (const auto& potentialNeighbor : potentialNeighbors) {
-//             // Only check adjacency if the potential neighbor is in Tb
-//             if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor, triangleAdjacency)) {
-//                 count++;
-//             }
-//         }
-//     }
-
-//     double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
-//     return result;
-// }
-
-// double ATaTb(const Cluster& Ta, const Cluster& Tb, 
-//              const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
-//              const TriangleAdjacency& triangleAdjacency) {
-//     int count = 0;
-
-//     // Convert Tb's triangles to a set for O(1) lookup
-//     std::unordered_set<Triangle> tbTriangles(Tb.triangles.begin(), Tb.triangles.end());
-
-//     // For each triangle in Ta, check its potential neighbors using the cache
-//     for (const auto& ta_i : Ta.triangles) {
-//         auto potentialNeighbors = potentialNeighborsCache.at(ta_i);  // Use the passed-in cache
-//         for (const auto& potentialNeighbor : potentialNeighbors) {
-//             // Only check adjacency if the potential neighbor is in Tb
-//             if (tbTriangles.count(potentialNeighbor) && ta_i.isAdjacent(potentialNeighbor, triangleAdjacency)) {
-//                 count++;
-//             }
-//         }
-//     }
-
-//     double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
-//     return result;
-// }
-
 double ATaTb(const Cluster& Ta, const Cluster& Tb, 
              const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
              const TriangleAdjacency& triangleAdjacency,
@@ -1341,7 +1275,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         initialTriangleCount += cluster.triangles.size();
     }
 
-    while (iteration < 2) {
+    while (iteration < 10) {
         std::cout << "Starting iteration " << iteration << " with " << clusters.size() << " clusters." << std::endl;
 
         int mergesInThisIteration = 0;
@@ -1674,7 +1608,7 @@ std::vector<Cluster> createSearchSpaces(const std::vector<Triangle>& triangles, 
     
     // 3. Iterative merging and splitting based on adjacency similarity
     std::cout << "3. Iterative merging and splitting based on adjacency similarity" << std::endl;
-    double tau_N = 0.5;  // Threshold for adjacency similarity
+    double tau_N = 0.05;  // Threshold for adjacency similarity
     refineClusters(clusters, tau_N);
 
     // std::set<Triangle> usedTriangles; // This will store triangles that are part of a component
@@ -1744,7 +1678,7 @@ std::vector<Cluster> createSearchSpaces(const std::vector<Triangle>& triangles, 
 
 void testSpatialHash(const std::vector<Triangle>& triangles) {
 
-    SpatialHash spatialHash(1);  // Assuming 1 is the cell size you want
+    SpatialHash spatialHash(0.1);  // Assuming 1 is the cell size you want
 
     // Ensure there are at least 3 triangles for the test
     if (triangles.size() < 3) {
@@ -1781,7 +1715,7 @@ int main() {
     std::vector<double> weights = {1.0, 1.0, 1.0, 1.0};
     std::vector<Vector3D> allVertices;    
     std::vector<std::vector<Vector3D>> quadPolygons; // Store polygons with 4 vertices
-    double tau_S = 0.5;  // Threshold for shape similarity
+    double tau_S = 0.01;  // Threshold for shape similarity
     std::string inputfile = "/home/kingpin/Documents/blender/kb3d_americana-native.obj";
     std::string err;
     // Read the OBJ file into a buffer
