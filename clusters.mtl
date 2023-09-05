@@ -1,0 +1,5109 @@
+newmtl material0
+Kd 1 0 0
+
+newmtl material1
+Kd 1 0.00352317 0
+
+newmtl material2
+Kd 1 0.0070464 0
+
+newmtl material3
+Kd 1 0.0105696 0
+
+newmtl material4
+Kd 1 0.0140928 0
+
+newmtl material5
+Kd 1 0.017616 0
+
+newmtl material6
+Kd 1 0.0211391 0
+
+newmtl material7
+Kd 1 0.0246624 0
+
+newmtl material8
+Kd 1 0.0281855 0
+
+newmtl material9
+Kd 1 0.0317088 0
+
+newmtl material10
+Kd 1 0.0352319 0
+
+newmtl material11
+Kd 1 0.0387551 0
+
+newmtl material12
+Kd 1 0.0422783 0
+
+newmtl material13
+Kd 1 0.0458015 0
+
+newmtl material14
+Kd 1 0.0493248 0
+
+newmtl material15
+Kd 1 0.0528479 0
+
+newmtl material16
+Kd 1 0.0563711 0
+
+newmtl material17
+Kd 1 0.0598943 0
+
+newmtl material18
+Kd 1 0.0634175 0
+
+newmtl material19
+Kd 1 0.0669407 0
+
+newmtl material20
+Kd 1 0.0704639 0
+
+newmtl material21
+Kd 1 0.0739871 0
+
+newmtl material22
+Kd 1 0.0775102 0
+
+newmtl material23
+Kd 1 0.0810335 0
+
+newmtl material24
+Kd 1 0.0845566 0
+
+newmtl material25
+Kd 1 0.0880798 0
+
+newmtl material26
+Kd 1 0.091603 0
+
+newmtl material27
+Kd 1 0.0951262 0
+
+newmtl material28
+Kd 1 0.0986494 0
+
+newmtl material29
+Kd 1 0.102173 0
+
+newmtl material30
+Kd 1 0.105696 0
+
+newmtl material31
+Kd 1 0.109219 0
+
+newmtl material32
+Kd 1 0.112742 0
+
+newmtl material33
+Kd 1 0.116265 0
+
+newmtl material34
+Kd 1 0.119789 0
+
+newmtl material35
+Kd 1 0.123312 0
+
+newmtl material36
+Kd 1 0.126835 0
+
+newmtl material37
+Kd 1 0.130358 0
+
+newmtl material38
+Kd 1 0.133881 0
+
+newmtl material39
+Kd 1 0.137405 0
+
+newmtl material40
+Kd 1 0.140928 0
+
+newmtl material41
+Kd 1 0.144451 0
+
+newmtl material42
+Kd 1 0.147974 0
+
+newmtl material43
+Kd 1 0.151497 0
+
+newmtl material44
+Kd 1 0.15502 0
+
+newmtl material45
+Kd 1 0.158544 0
+
+newmtl material46
+Kd 1 0.162067 0
+
+newmtl material47
+Kd 1 0.16559 0
+
+newmtl material48
+Kd 1 0.169113 0
+
+newmtl material49
+Kd 1 0.172636 0
+
+newmtl material50
+Kd 1 0.17616 0
+
+newmtl material51
+Kd 1 0.179683 0
+
+newmtl material52
+Kd 1 0.183206 0
+
+newmtl material53
+Kd 1 0.186729 0
+
+newmtl material54
+Kd 1 0.190252 0
+
+newmtl material55
+Kd 1 0.193776 0
+
+newmtl material56
+Kd 1 0.197299 0
+
+newmtl material57
+Kd 1 0.200822 0
+
+newmtl material58
+Kd 1 0.204345 0
+
+newmtl material59
+Kd 1 0.207868 0
+
+newmtl material60
+Kd 1 0.211392 0
+
+newmtl material61
+Kd 1 0.214915 0
+
+newmtl material62
+Kd 1 0.218438 0
+
+newmtl material63
+Kd 1 0.221961 0
+
+newmtl material64
+Kd 1 0.225484 0
+
+newmtl material65
+Kd 1 0.229007 0
+
+newmtl material66
+Kd 1 0.232531 0
+
+newmtl material67
+Kd 1 0.236054 0
+
+newmtl material68
+Kd 1 0.239577 0
+
+newmtl material69
+Kd 1 0.2431 0
+
+newmtl material70
+Kd 1 0.246623 0
+
+newmtl material71
+Kd 1 0.250147 0
+
+newmtl material72
+Kd 1 0.25367 0
+
+newmtl material73
+Kd 1 0.257193 0
+
+newmtl material74
+Kd 1 0.260716 0
+
+newmtl material75
+Kd 1 0.264239 0
+
+newmtl material76
+Kd 1 0.267763 0
+
+newmtl material77
+Kd 1 0.271286 0
+
+newmtl material78
+Kd 1 0.274809 0
+
+newmtl material79
+Kd 1 0.278332 0
+
+newmtl material80
+Kd 1 0.281855 0
+
+newmtl material81
+Kd 1 0.285379 0
+
+newmtl material82
+Kd 1 0.288902 0
+
+newmtl material83
+Kd 1 0.292425 0
+
+newmtl material84
+Kd 1 0.295948 0
+
+newmtl material85
+Kd 1 0.299471 0
+
+newmtl material86
+Kd 1 0.302994 0
+
+newmtl material87
+Kd 1 0.306518 0
+
+newmtl material88
+Kd 1 0.310041 0
+
+newmtl material89
+Kd 1 0.313564 0
+
+newmtl material90
+Kd 1 0.317087 0
+
+newmtl material91
+Kd 1 0.32061 0
+
+newmtl material92
+Kd 1 0.324134 0
+
+newmtl material93
+Kd 1 0.327657 0
+
+newmtl material94
+Kd 1 0.33118 0
+
+newmtl material95
+Kd 1 0.334703 0
+
+newmtl material96
+Kd 1 0.338226 0
+
+newmtl material97
+Kd 1 0.34175 0
+
+newmtl material98
+Kd 1 0.345273 0
+
+newmtl material99
+Kd 1 0.348796 0
+
+newmtl material100
+Kd 1 0.352319 0
+
+newmtl material101
+Kd 1 0.355842 0
+
+newmtl material102
+Kd 1 0.359366 0
+
+newmtl material103
+Kd 1 0.362889 0
+
+newmtl material104
+Kd 1 0.366412 0
+
+newmtl material105
+Kd 1 0.369935 0
+
+newmtl material106
+Kd 1 0.373458 0
+
+newmtl material107
+Kd 1 0.376981 0
+
+newmtl material108
+Kd 1 0.380505 0
+
+newmtl material109
+Kd 1 0.384028 0
+
+newmtl material110
+Kd 1 0.387551 0
+
+newmtl material111
+Kd 1 0.391074 0
+
+newmtl material112
+Kd 1 0.394597 0
+
+newmtl material113
+Kd 1 0.398121 0
+
+newmtl material114
+Kd 1 0.401644 0
+
+newmtl material115
+Kd 1 0.405167 0
+
+newmtl material116
+Kd 1 0.40869 0
+
+newmtl material117
+Kd 1 0.412213 0
+
+newmtl material118
+Kd 1 0.415737 0
+
+newmtl material119
+Kd 1 0.41926 0
+
+newmtl material120
+Kd 1 0.422783 0
+
+newmtl material121
+Kd 1 0.426306 0
+
+newmtl material122
+Kd 1 0.429829 0
+
+newmtl material123
+Kd 1 0.433353 0
+
+newmtl material124
+Kd 1 0.436876 0
+
+newmtl material125
+Kd 1 0.440399 0
+
+newmtl material126
+Kd 1 0.443922 0
+
+newmtl material127
+Kd 1 0.447445 0
+
+newmtl material128
+Kd 1 0.450969 0
+
+newmtl material129
+Kd 1 0.454492 0
+
+newmtl material130
+Kd 1 0.458015 0
+
+newmtl material131
+Kd 1 0.461538 0
+
+newmtl material132
+Kd 1 0.465061 0
+
+newmtl material133
+Kd 1 0.468584 0
+
+newmtl material134
+Kd 1 0.472108 0
+
+newmtl material135
+Kd 1 0.475631 0
+
+newmtl material136
+Kd 1 0.479154 0
+
+newmtl material137
+Kd 1 0.482677 0
+
+newmtl material138
+Kd 1 0.4862 0
+
+newmtl material139
+Kd 1 0.489724 0
+
+newmtl material140
+Kd 1 0.493247 0
+
+newmtl material141
+Kd 1 0.49677 0
+
+newmtl material142
+Kd 1 0.500293 0
+
+newmtl material143
+Kd 1 0.503816 0
+
+newmtl material144
+Kd 1 0.50734 0
+
+newmtl material145
+Kd 1 0.510863 0
+
+newmtl material146
+Kd 1 0.514386 0
+
+newmtl material147
+Kd 1 0.517909 0
+
+newmtl material148
+Kd 1 0.521432 0
+
+newmtl material149
+Kd 1 0.524956 0
+
+newmtl material150
+Kd 1 0.528479 0
+
+newmtl material151
+Kd 1 0.532002 0
+
+newmtl material152
+Kd 1 0.535525 0
+
+newmtl material153
+Kd 1 0.539048 0
+
+newmtl material154
+Kd 1 0.542571 0
+
+newmtl material155
+Kd 1 0.546095 0
+
+newmtl material156
+Kd 1 0.549618 0
+
+newmtl material157
+Kd 1 0.553141 0
+
+newmtl material158
+Kd 1 0.556664 0
+
+newmtl material159
+Kd 1 0.560187 0
+
+newmtl material160
+Kd 1 0.563711 0
+
+newmtl material161
+Kd 1 0.567234 0
+
+newmtl material162
+Kd 1 0.570757 0
+
+newmtl material163
+Kd 1 0.57428 0
+
+newmtl material164
+Kd 1 0.577803 0
+
+newmtl material165
+Kd 1 0.581327 0
+
+newmtl material166
+Kd 1 0.58485 0
+
+newmtl material167
+Kd 1 0.588373 0
+
+newmtl material168
+Kd 1 0.591896 0
+
+newmtl material169
+Kd 1 0.595419 0
+
+newmtl material170
+Kd 1 0.598943 0
+
+newmtl material171
+Kd 1 0.602466 0
+
+newmtl material172
+Kd 1 0.605989 0
+
+newmtl material173
+Kd 1 0.609512 0
+
+newmtl material174
+Kd 1 0.613035 0
+
+newmtl material175
+Kd 1 0.616558 0
+
+newmtl material176
+Kd 1 0.620082 0
+
+newmtl material177
+Kd 1 0.623605 0
+
+newmtl material178
+Kd 1 0.627128 0
+
+newmtl material179
+Kd 1 0.630651 0
+
+newmtl material180
+Kd 1 0.634174 0
+
+newmtl material181
+Kd 1 0.637698 0
+
+newmtl material182
+Kd 1 0.641221 0
+
+newmtl material183
+Kd 1 0.644744 0
+
+newmtl material184
+Kd 1 0.648267 0
+
+newmtl material185
+Kd 1 0.65179 0
+
+newmtl material186
+Kd 1 0.655314 0
+
+newmtl material187
+Kd 1 0.658837 0
+
+newmtl material188
+Kd 1 0.66236 0
+
+newmtl material189
+Kd 1 0.665883 0
+
+newmtl material190
+Kd 1 0.669406 0
+
+newmtl material191
+Kd 1 0.67293 0
+
+newmtl material192
+Kd 1 0.676453 0
+
+newmtl material193
+Kd 1 0.679976 0
+
+newmtl material194
+Kd 1 0.683499 0
+
+newmtl material195
+Kd 1 0.687022 0
+
+newmtl material196
+Kd 1 0.690545 0
+
+newmtl material197
+Kd 1 0.694069 0
+
+newmtl material198
+Kd 1 0.697592 0
+
+newmtl material199
+Kd 1 0.701115 0
+
+newmtl material200
+Kd 1 0.704638 0
+
+newmtl material201
+Kd 1 0.708161 0
+
+newmtl material202
+Kd 1 0.711685 0
+
+newmtl material203
+Kd 1 0.715208 0
+
+newmtl material204
+Kd 1 0.718731 0
+
+newmtl material205
+Kd 1 0.722254 0
+
+newmtl material206
+Kd 1 0.725777 0
+
+newmtl material207
+Kd 1 0.729301 0
+
+newmtl material208
+Kd 1 0.732824 0
+
+newmtl material209
+Kd 1 0.736347 0
+
+newmtl material210
+Kd 1 0.73987 0
+
+newmtl material211
+Kd 1 0.743393 0
+
+newmtl material212
+Kd 1 0.746917 0
+
+newmtl material213
+Kd 1 0.75044 0
+
+newmtl material214
+Kd 1 0.753963 0
+
+newmtl material215
+Kd 1 0.757486 0
+
+newmtl material216
+Kd 1 0.761009 0
+
+newmtl material217
+Kd 1 0.764533 0
+
+newmtl material218
+Kd 1 0.768056 0
+
+newmtl material219
+Kd 1 0.771579 0
+
+newmtl material220
+Kd 1 0.775102 0
+
+newmtl material221
+Kd 1 0.778625 0
+
+newmtl material222
+Kd 1 0.782148 0
+
+newmtl material223
+Kd 1 0.785672 0
+
+newmtl material224
+Kd 1 0.789195 0
+
+newmtl material225
+Kd 1 0.792718 0
+
+newmtl material226
+Kd 1 0.796241 0
+
+newmtl material227
+Kd 1 0.799764 0
+
+newmtl material228
+Kd 1 0.803288 0
+
+newmtl material229
+Kd 1 0.806811 0
+
+newmtl material230
+Kd 1 0.810334 0
+
+newmtl material231
+Kd 1 0.813857 0
+
+newmtl material232
+Kd 1 0.81738 0
+
+newmtl material233
+Kd 1 0.820904 0
+
+newmtl material234
+Kd 1 0.824427 0
+
+newmtl material235
+Kd 1 0.82795 0
+
+newmtl material236
+Kd 1 0.831473 0
+
+newmtl material237
+Kd 1 0.834996 0
+
+newmtl material238
+Kd 1 0.83852 0
+
+newmtl material239
+Kd 1 0.842043 0
+
+newmtl material240
+Kd 1 0.845566 0
+
+newmtl material241
+Kd 1 0.849089 0
+
+newmtl material242
+Kd 1 0.852612 0
+
+newmtl material243
+Kd 1 0.856135 0
+
+newmtl material244
+Kd 1 0.859659 0
+
+newmtl material245
+Kd 1 0.863182 0
+
+newmtl material246
+Kd 1 0.866705 0
+
+newmtl material247
+Kd 1 0.870228 0
+
+newmtl material248
+Kd 1 0.873751 0
+
+newmtl material249
+Kd 1 0.877275 0
+
+newmtl material250
+Kd 1 0.880798 0
+
+newmtl material251
+Kd 1 0.884321 0
+
+newmtl material252
+Kd 1 0.887844 0
+
+newmtl material253
+Kd 1 0.891367 0
+
+newmtl material254
+Kd 1 0.894891 0
+
+newmtl material255
+Kd 1 0.898414 0
+
+newmtl material256
+Kd 1 0.901937 0
+
+newmtl material257
+Kd 1 0.90546 0
+
+newmtl material258
+Kd 1 0.908983 0
+
+newmtl material259
+Kd 1 0.912507 0
+
+newmtl material260
+Kd 1 0.91603 0
+
+newmtl material261
+Kd 1 0.919553 0
+
+newmtl material262
+Kd 1 0.923076 0
+
+newmtl material263
+Kd 1 0.926599 0
+
+newmtl material264
+Kd 1 0.930122 0
+
+newmtl material265
+Kd 1 0.933646 0
+
+newmtl material266
+Kd 1 0.937169 0
+
+newmtl material267
+Kd 1 0.940692 0
+
+newmtl material268
+Kd 1 0.944215 0
+
+newmtl material269
+Kd 1 0.947738 0
+
+newmtl material270
+Kd 1 0.951262 0
+
+newmtl material271
+Kd 1 0.954785 0
+
+newmtl material272
+Kd 1 0.958308 0
+
+newmtl material273
+Kd 1 0.961831 0
+
+newmtl material274
+Kd 1 0.965354 0
+
+newmtl material275
+Kd 1 0.968878 0
+
+newmtl material276
+Kd 1 0.972401 0
+
+newmtl material277
+Kd 1 0.975924 0
+
+newmtl material278
+Kd 1 0.979447 0
+
+newmtl material279
+Kd 1 0.98297 0
+
+newmtl material280
+Kd 1 0.986494 0
+
+newmtl material281
+Kd 1 0.990017 0
+
+newmtl material282
+Kd 1 0.99354 0
+
+newmtl material283
+Kd 1 0.997063 0
+
+newmtl material284
+Kd 0.999414 1 0
+
+newmtl material285
+Kd 0.99589 1 0
+
+newmtl material286
+Kd 0.992367 1 0
+
+newmtl material287
+Kd 0.988844 1 0
+
+newmtl material288
+Kd 0.985321 1 0
+
+newmtl material289
+Kd 0.981798 1 0
+
+newmtl material290
+Kd 0.978275 1 0
+
+newmtl material291
+Kd 0.974751 1 0
+
+newmtl material292
+Kd 0.971228 1 0
+
+newmtl material293
+Kd 0.967705 1 0
+
+newmtl material294
+Kd 0.964182 1 0
+
+newmtl material295
+Kd 0.960659 1 0
+
+newmtl material296
+Kd 0.957135 1 0
+
+newmtl material297
+Kd 0.953612 1 0
+
+newmtl material298
+Kd 0.950089 1 0
+
+newmtl material299
+Kd 0.946566 1 0
+
+newmtl material300
+Kd 0.943043 1 0
+
+newmtl material301
+Kd 0.939519 1 0
+
+newmtl material302
+Kd 0.935996 1 0
+
+newmtl material303
+Kd 0.932473 1 0
+
+newmtl material304
+Kd 0.92895 1 0
+
+newmtl material305
+Kd 0.925426 1 0
+
+newmtl material306
+Kd 0.921903 1 0
+
+newmtl material307
+Kd 0.91838 1 0
+
+newmtl material308
+Kd 0.914857 1 0
+
+newmtl material309
+Kd 0.911333 1 0
+
+newmtl material310
+Kd 0.90781 1 0
+
+newmtl material311
+Kd 0.904287 1 0
+
+newmtl material312
+Kd 0.900764 1 0
+
+newmtl material313
+Kd 0.89724 1 0
+
+newmtl material314
+Kd 0.893717 1 0
+
+newmtl material315
+Kd 0.890194 1 0
+
+newmtl material316
+Kd 0.886671 1 0
+
+newmtl material317
+Kd 0.883147 1 0
+
+newmtl material318
+Kd 0.879624 1 0
+
+newmtl material319
+Kd 0.876101 1 0
+
+newmtl material320
+Kd 0.872578 1 0
+
+newmtl material321
+Kd 0.869054 1 0
+
+newmtl material322
+Kd 0.865531 1 0
+
+newmtl material323
+Kd 0.862008 1 0
+
+newmtl material324
+Kd 0.858485 1 0
+
+newmtl material325
+Kd 0.854961 1 0
+
+newmtl material326
+Kd 0.851438 1 0
+
+newmtl material327
+Kd 0.847915 1 0
+
+newmtl material328
+Kd 0.844392 1 0
+
+newmtl material329
+Kd 0.840868 1 0
+
+newmtl material330
+Kd 0.837345 1 0
+
+newmtl material331
+Kd 0.833822 1 0
+
+newmtl material332
+Kd 0.830299 1 0
+
+newmtl material333
+Kd 0.826775 1 0
+
+newmtl material334
+Kd 0.823252 1 0
+
+newmtl material335
+Kd 0.819729 1 0
+
+newmtl material336
+Kd 0.816206 1 0
+
+newmtl material337
+Kd 0.812682 1 0
+
+newmtl material338
+Kd 0.809159 1 0
+
+newmtl material339
+Kd 0.805636 1 0
+
+newmtl material340
+Kd 0.802113 1 0
+
+newmtl material341
+Kd 0.798589 1 0
+
+newmtl material342
+Kd 0.795066 1 0
+
+newmtl material343
+Kd 0.791543 1 0
+
+newmtl material344
+Kd 0.78802 1 0
+
+newmtl material345
+Kd 0.784496 1 0
+
+newmtl material346
+Kd 0.780973 1 0
+
+newmtl material347
+Kd 0.77745 1 0
+
+newmtl material348
+Kd 0.773926 1 0
+
+newmtl material349
+Kd 0.770403 1 0
+
+newmtl material350
+Kd 0.76688 1 0
+
+newmtl material351
+Kd 0.763357 1 0
+
+newmtl material352
+Kd 0.759834 1 0
+
+newmtl material353
+Kd 0.75631 1 0
+
+newmtl material354
+Kd 0.752787 1 0
+
+newmtl material355
+Kd 0.749264 1 0
+
+newmtl material356
+Kd 0.745741 1 0
+
+newmtl material357
+Kd 0.742217 1 0
+
+newmtl material358
+Kd 0.738694 1 0
+
+newmtl material359
+Kd 0.735171 1 0
+
+newmtl material360
+Kd 0.731647 1 0
+
+newmtl material361
+Kd 0.728124 1 0
+
+newmtl material362
+Kd 0.724601 1 0
+
+newmtl material363
+Kd 0.721078 1 0
+
+newmtl material364
+Kd 0.717554 1 0
+
+newmtl material365
+Kd 0.714031 1 0
+
+newmtl material366
+Kd 0.710508 1 0
+
+newmtl material367
+Kd 0.706985 1 0
+
+newmtl material368
+Kd 0.703461 1 0
+
+newmtl material369
+Kd 0.699938 1 0
+
+newmtl material370
+Kd 0.696415 1 0
+
+newmtl material371
+Kd 0.692892 1 0
+
+newmtl material372
+Kd 0.689368 1 0
+
+newmtl material373
+Kd 0.685845 1 0
+
+newmtl material374
+Kd 0.682322 1 0
+
+newmtl material375
+Kd 0.678799 1 0
+
+newmtl material376
+Kd 0.675275 1 0
+
+newmtl material377
+Kd 0.671752 1 0
+
+newmtl material378
+Kd 0.668229 1 0
+
+newmtl material379
+Kd 0.664706 1 0
+
+newmtl material380
+Kd 0.661182 1 0
+
+newmtl material381
+Kd 0.657659 1 0
+
+newmtl material382
+Kd 0.654136 1 0
+
+newmtl material383
+Kd 0.650613 1 0
+
+newmtl material384
+Kd 0.647089 1 0
+
+newmtl material385
+Kd 0.643566 1 0
+
+newmtl material386
+Kd 0.640043 1 0
+
+newmtl material387
+Kd 0.63652 1 0
+
+newmtl material388
+Kd 0.632996 1 0
+
+newmtl material389
+Kd 0.629473 1 0
+
+newmtl material390
+Kd 0.62595 1 0
+
+newmtl material391
+Kd 0.622427 1 0
+
+newmtl material392
+Kd 0.618903 1 0
+
+newmtl material393
+Kd 0.61538 1 0
+
+newmtl material394
+Kd 0.611857 1 0
+
+newmtl material395
+Kd 0.608334 1 0
+
+newmtl material396
+Kd 0.60481 1 0
+
+newmtl material397
+Kd 0.601287 1 0
+
+newmtl material398
+Kd 0.597764 1 0
+
+newmtl material399
+Kd 0.594241 1 0
+
+newmtl material400
+Kd 0.590717 1 0
+
+newmtl material401
+Kd 0.587194 1 0
+
+newmtl material402
+Kd 0.583671 1 0
+
+newmtl material403
+Kd 0.580148 1 0
+
+newmtl material404
+Kd 0.576624 1 0
+
+newmtl material405
+Kd 0.573101 1 0
+
+newmtl material406
+Kd 0.569578 1 0
+
+newmtl material407
+Kd 0.566055 1 0
+
+newmtl material408
+Kd 0.562531 1 0
+
+newmtl material409
+Kd 0.559008 1 0
+
+newmtl material410
+Kd 0.555485 1 0
+
+newmtl material411
+Kd 0.551962 1 0
+
+newmtl material412
+Kd 0.548438 1 0
+
+newmtl material413
+Kd 0.544915 1 0
+
+newmtl material414
+Kd 0.541392 1 0
+
+newmtl material415
+Kd 0.537868 1 0
+
+newmtl material416
+Kd 0.534345 1 0
+
+newmtl material417
+Kd 0.530822 1 0
+
+newmtl material418
+Kd 0.527299 1 0
+
+newmtl material419
+Kd 0.523775 1 0
+
+newmtl material420
+Kd 0.520252 1 0
+
+newmtl material421
+Kd 0.516729 1 0
+
+newmtl material422
+Kd 0.513206 1 0
+
+newmtl material423
+Kd 0.509682 1 0
+
+newmtl material424
+Kd 0.506159 1 0
+
+newmtl material425
+Kd 0.502636 1 0
+
+newmtl material426
+Kd 0.499113 1 0
+
+newmtl material427
+Kd 0.495589 1 0
+
+newmtl material428
+Kd 0.492066 1 0
+
+newmtl material429
+Kd 0.488543 1 0
+
+newmtl material430
+Kd 0.48502 1 0
+
+newmtl material431
+Kd 0.481496 1 0
+
+newmtl material432
+Kd 0.477973 1 0
+
+newmtl material433
+Kd 0.47445 1 0
+
+newmtl material434
+Kd 0.470927 1 0
+
+newmtl material435
+Kd 0.467403 1 0
+
+newmtl material436
+Kd 0.46388 1 0
+
+newmtl material437
+Kd 0.460357 1 0
+
+newmtl material438
+Kd 0.456834 1 0
+
+newmtl material439
+Kd 0.45331 1 0
+
+newmtl material440
+Kd 0.449787 1 0
+
+newmtl material441
+Kd 0.446264 1 0
+
+newmtl material442
+Kd 0.442741 1 0
+
+newmtl material443
+Kd 0.439217 1 0
+
+newmtl material444
+Kd 0.435694 1 0
+
+newmtl material445
+Kd 0.432171 1 0
+
+newmtl material446
+Kd 0.428648 1 0
+
+newmtl material447
+Kd 0.425124 1 0
+
+newmtl material448
+Kd 0.421601 1 0
+
+newmtl material449
+Kd 0.418078 1 0
+
+newmtl material450
+Kd 0.414555 1 0
+
+newmtl material451
+Kd 0.411031 1 0
+
+newmtl material452
+Kd 0.407508 1 0
+
+newmtl material453
+Kd 0.403985 1 0
+
+newmtl material454
+Kd 0.400462 1 0
+
+newmtl material455
+Kd 0.396938 1 0
+
+newmtl material456
+Kd 0.393415 1 0
+
+newmtl material457
+Kd 0.389892 1 0
+
+newmtl material458
+Kd 0.386369 1 0
+
+newmtl material459
+Kd 0.382845 1 0
+
+newmtl material460
+Kd 0.379322 1 0
+
+newmtl material461
+Kd 0.375799 1 0
+
+newmtl material462
+Kd 0.372276 1 0
+
+newmtl material463
+Kd 0.368752 1 0
+
+newmtl material464
+Kd 0.365229 1 0
+
+newmtl material465
+Kd 0.361706 1 0
+
+newmtl material466
+Kd 0.358183 1 0
+
+newmtl material467
+Kd 0.354659 1 0
+
+newmtl material468
+Kd 0.351136 1 0
+
+newmtl material469
+Kd 0.347613 1 0
+
+newmtl material470
+Kd 0.34409 1 0
+
+newmtl material471
+Kd 0.340566 1 0
+
+newmtl material472
+Kd 0.337043 1 0
+
+newmtl material473
+Kd 0.33352 1 0
+
+newmtl material474
+Kd 0.329996 1 0
+
+newmtl material475
+Kd 0.326473 1 0
+
+newmtl material476
+Kd 0.32295 1 0
+
+newmtl material477
+Kd 0.319427 1 0
+
+newmtl material478
+Kd 0.315903 1 0
+
+newmtl material479
+Kd 0.31238 1 0
+
+newmtl material480
+Kd 0.308857 1 0
+
+newmtl material481
+Kd 0.305334 1 0
+
+newmtl material482
+Kd 0.301811 1 0
+
+newmtl material483
+Kd 0.298287 1 0
+
+newmtl material484
+Kd 0.294764 1 0
+
+newmtl material485
+Kd 0.291241 1 0
+
+newmtl material486
+Kd 0.287717 1 0
+
+newmtl material487
+Kd 0.284194 1 0
+
+newmtl material488
+Kd 0.280671 1 0
+
+newmtl material489
+Kd 0.277148 1 0
+
+newmtl material490
+Kd 0.273624 1 0
+
+newmtl material491
+Kd 0.270101 1 0
+
+newmtl material492
+Kd 0.266578 1 0
+
+newmtl material493
+Kd 0.263055 1 0
+
+newmtl material494
+Kd 0.259531 1 0
+
+newmtl material495
+Kd 0.256008 1 0
+
+newmtl material496
+Kd 0.252485 1 0
+
+newmtl material497
+Kd 0.248962 1 0
+
+newmtl material498
+Kd 0.245438 1 0
+
+newmtl material499
+Kd 0.241915 1 0
+
+newmtl material500
+Kd 0.238392 1 0
+
+newmtl material501
+Kd 0.234869 1 0
+
+newmtl material502
+Kd 0.231345 1 0
+
+newmtl material503
+Kd 0.227822 1 0
+
+newmtl material504
+Kd 0.224299 1 0
+
+newmtl material505
+Kd 0.220776 1 0
+
+newmtl material506
+Kd 0.217252 1 0
+
+newmtl material507
+Kd 0.213729 1 0
+
+newmtl material508
+Kd 0.210206 1 0
+
+newmtl material509
+Kd 0.206683 1 0
+
+newmtl material510
+Kd 0.203159 1 0
+
+newmtl material511
+Kd 0.199636 1 0
+
+newmtl material512
+Kd 0.196113 1 0
+
+newmtl material513
+Kd 0.19259 1 0
+
+newmtl material514
+Kd 0.189066 1 0
+
+newmtl material515
+Kd 0.185543 1 0
+
+newmtl material516
+Kd 0.18202 1 0
+
+newmtl material517
+Kd 0.178497 1 0
+
+newmtl material518
+Kd 0.174973 1 0
+
+newmtl material519
+Kd 0.17145 1 0
+
+newmtl material520
+Kd 0.167927 1 0
+
+newmtl material521
+Kd 0.164404 1 0
+
+newmtl material522
+Kd 0.16088 1 0
+
+newmtl material523
+Kd 0.157357 1 0
+
+newmtl material524
+Kd 0.153834 1 0
+
+newmtl material525
+Kd 0.150311 1 0
+
+newmtl material526
+Kd 0.146787 1 0
+
+newmtl material527
+Kd 0.143264 1 0
+
+newmtl material528
+Kd 0.139741 1 0
+
+newmtl material529
+Kd 0.136217 1 0
+
+newmtl material530
+Kd 0.132694 1 0
+
+newmtl material531
+Kd 0.129171 1 0
+
+newmtl material532
+Kd 0.125648 1 0
+
+newmtl material533
+Kd 0.122124 1 0
+
+newmtl material534
+Kd 0.118601 1 0
+
+newmtl material535
+Kd 0.115078 1 0
+
+newmtl material536
+Kd 0.111555 1 0
+
+newmtl material537
+Kd 0.108032 1 0
+
+newmtl material538
+Kd 0.104508 1 0
+
+newmtl material539
+Kd 0.100985 1 0
+
+newmtl material540
+Kd 0.0974617 1 0
+
+newmtl material541
+Kd 0.0939385 1 0
+
+newmtl material542
+Kd 0.0904152 1 0
+
+newmtl material543
+Kd 0.0868919 1 0
+
+newmtl material544
+Kd 0.0833687 1 0
+
+newmtl material545
+Kd 0.0798454 1 0
+
+newmtl material546
+Kd 0.0763222 1 0
+
+newmtl material547
+Kd 0.072799 1 0
+
+newmtl material548
+Kd 0.0692756 1 0
+
+newmtl material549
+Kd 0.0657524 1 0
+
+newmtl material550
+Kd 0.0622292 1 0
+
+newmtl material551
+Kd 0.0587059 1 0
+
+newmtl material552
+Kd 0.0551827 1 0
+
+newmtl material553
+Kd 0.0516593 1 0
+
+newmtl material554
+Kd 0.0481361 1 0
+
+newmtl material555
+Kd 0.0446129 1 0
+
+newmtl material556
+Kd 0.0410897 1 0
+
+newmtl material557
+Kd 0.0375664 1 0
+
+newmtl material558
+Kd 0.0340431 1 0
+
+newmtl material559
+Kd 0.0305198 1 0
+
+newmtl material560
+Kd 0.0269966 1 0
+
+newmtl material561
+Kd 0.0234734 1 0
+
+newmtl material562
+Kd 0.0199502 1 0
+
+newmtl material563
+Kd 0.0164268 1 0
+
+newmtl material564
+Kd 0.0129036 1 0
+
+newmtl material565
+Kd 0.00938034 1 0
+
+newmtl material566
+Kd 0.00585711 1 0
+
+newmtl material567
+Kd 0.00233388 1 0
+
+newmtl material568
+Kd 0 1 0.00118947
+
+newmtl material569
+Kd 0 1 0.00471258
+
+newmtl material570
+Kd 0 1 0.00823593
+
+newmtl material571
+Kd 0 1 0.0117593
+
+newmtl material572
+Kd 0 1 0.0152824
+
+newmtl material573
+Kd 0 1 0.0188057
+
+newmtl material574
+Kd 0 1 0.0223289
+
+newmtl material575
+Kd 0 1 0.0258522
+
+newmtl material576
+Kd 0 1 0.0293756
+
+newmtl material577
+Kd 0 1 0.0328987
+
+newmtl material578
+Kd 0 1 0.036422
+
+newmtl material579
+Kd 0 1 0.0399451
+
+newmtl material580
+Kd 0 1 0.0434685
+
+newmtl material581
+Kd 0 1 0.0469918
+
+newmtl material582
+Kd 0 1 0.0505149
+
+newmtl material583
+Kd 0 1 0.0540383
+
+newmtl material584
+Kd 0 1 0.0575614
+
+newmtl material585
+Kd 0 1 0.0610847
+
+newmtl material586
+Kd 0 1 0.0646081
+
+newmtl material587
+Kd 0 1 0.0681312
+
+newmtl material588
+Kd 0 1 0.0716546
+
+newmtl material589
+Kd 0 1 0.0751777
+
+newmtl material590
+Kd 0 1 0.078701
+
+newmtl material591
+Kd 0 1 0.0822244
+
+newmtl material592
+Kd 0 1 0.0857475
+
+newmtl material593
+Kd 0 1 0.0892708
+
+newmtl material594
+Kd 0 1 0.0927939
+
+newmtl material595
+Kd 0 1 0.0963173
+
+newmtl material596
+Kd 0 1 0.0998406
+
+newmtl material597
+Kd 0 1 0.103364
+
+newmtl material598
+Kd 0 1 0.106887
+
+newmtl material599
+Kd 0 1 0.11041
+
+newmtl material600
+Kd 0 1 0.113934
+
+newmtl material601
+Kd 0 1 0.117457
+
+newmtl material602
+Kd 0 1 0.12098
+
+newmtl material603
+Kd 0 1 0.124503
+
+newmtl material604
+Kd 0 1 0.128026
+
+newmtl material605
+Kd 0 1 0.13155
+
+newmtl material606
+Kd 0 1 0.135073
+
+newmtl material607
+Kd 0 1 0.138596
+
+newmtl material608
+Kd 0 1 0.14212
+
+newmtl material609
+Kd 0 1 0.145643
+
+newmtl material610
+Kd 0 1 0.149166
+
+newmtl material611
+Kd 0 1 0.152689
+
+newmtl material612
+Kd 0 1 0.156213
+
+newmtl material613
+Kd 0 1 0.159736
+
+newmtl material614
+Kd 0 1 0.163259
+
+newmtl material615
+Kd 0 1 0.166782
+
+newmtl material616
+Kd 0 1 0.170306
+
+newmtl material617
+Kd 0 1 0.173829
+
+newmtl material618
+Kd 0 1 0.177352
+
+newmtl material619
+Kd 0 1 0.180875
+
+newmtl material620
+Kd 0 1 0.184399
+
+newmtl material621
+Kd 0 1 0.187922
+
+newmtl material622
+Kd 0 1 0.191445
+
+newmtl material623
+Kd 0 1 0.194968
+
+newmtl material624
+Kd 0 1 0.198492
+
+newmtl material625
+Kd 0 1 0.202015
+
+newmtl material626
+Kd 0 1 0.205538
+
+newmtl material627
+Kd 0 1 0.209061
+
+newmtl material628
+Kd 0 1 0.212585
+
+newmtl material629
+Kd 0 1 0.216108
+
+newmtl material630
+Kd 0 1 0.219631
+
+newmtl material631
+Kd 0 1 0.223155
+
+newmtl material632
+Kd 0 1 0.226678
+
+newmtl material633
+Kd 0 1 0.230201
+
+newmtl material634
+Kd 0 1 0.233724
+
+newmtl material635
+Kd 0 1 0.237247
+
+newmtl material636
+Kd 0 1 0.240771
+
+newmtl material637
+Kd 0 1 0.244294
+
+newmtl material638
+Kd 0 1 0.247817
+
+newmtl material639
+Kd 0 1 0.25134
+
+newmtl material640
+Kd 0 1 0.254864
+
+newmtl material641
+Kd 0 1 0.258387
+
+newmtl material642
+Kd 0 1 0.26191
+
+newmtl material643
+Kd 0 1 0.265434
+
+newmtl material644
+Kd 0 1 0.268957
+
+newmtl material645
+Kd 0 1 0.27248
+
+newmtl material646
+Kd 0 1 0.276003
+
+newmtl material647
+Kd 0 1 0.279526
+
+newmtl material648
+Kd 0 1 0.28305
+
+newmtl material649
+Kd 0 1 0.286573
+
+newmtl material650
+Kd 0 1 0.290096
+
+newmtl material651
+Kd 0 1 0.29362
+
+newmtl material652
+Kd 0 1 0.297143
+
+newmtl material653
+Kd 0 1 0.300666
+
+newmtl material654
+Kd 0 1 0.304189
+
+newmtl material655
+Kd 0 1 0.307713
+
+newmtl material656
+Kd 0 1 0.311236
+
+newmtl material657
+Kd 0 1 0.314759
+
+newmtl material658
+Kd 0 1 0.318282
+
+newmtl material659
+Kd 0 1 0.321805
+
+newmtl material660
+Kd 0 1 0.325329
+
+newmtl material661
+Kd 0 1 0.328852
+
+newmtl material662
+Kd 0 1 0.332375
+
+newmtl material663
+Kd 0 1 0.335899
+
+newmtl material664
+Kd 0 1 0.339422
+
+newmtl material665
+Kd 0 1 0.342945
+
+newmtl material666
+Kd 0 1 0.346468
+
+newmtl material667
+Kd 0 1 0.349992
+
+newmtl material668
+Kd 0 1 0.353515
+
+newmtl material669
+Kd 0 1 0.357038
+
+newmtl material670
+Kd 0 1 0.360561
+
+newmtl material671
+Kd 0 1 0.364085
+
+newmtl material672
+Kd 0 1 0.367608
+
+newmtl material673
+Kd 0 1 0.371131
+
+newmtl material674
+Kd 0 1 0.374654
+
+newmtl material675
+Kd 0 1 0.378178
+
+newmtl material676
+Kd 0 1 0.381701
+
+newmtl material677
+Kd 0 1 0.385224
+
+newmtl material678
+Kd 0 1 0.388747
+
+newmtl material679
+Kd 0 1 0.392271
+
+newmtl material680
+Kd 0 1 0.395794
+
+newmtl material681
+Kd 0 1 0.399317
+
+newmtl material682
+Kd 0 1 0.40284
+
+newmtl material683
+Kd 0 1 0.406364
+
+newmtl material684
+Kd 0 1 0.409887
+
+newmtl material685
+Kd 0 1 0.41341
+
+newmtl material686
+Kd 0 1 0.416934
+
+newmtl material687
+Kd 0 1 0.420457
+
+newmtl material688
+Kd 0 1 0.42398
+
+newmtl material689
+Kd 0 1 0.427503
+
+newmtl material690
+Kd 0 1 0.431026
+
+newmtl material691
+Kd 0 1 0.43455
+
+newmtl material692
+Kd 0 1 0.438073
+
+newmtl material693
+Kd 0 1 0.441596
+
+newmtl material694
+Kd 0 1 0.445119
+
+newmtl material695
+Kd 0 1 0.448643
+
+newmtl material696
+Kd 0 1 0.452166
+
+newmtl material697
+Kd 0 1 0.455689
+
+newmtl material698
+Kd 0 1 0.459213
+
+newmtl material699
+Kd 0 1 0.462736
+
+newmtl material700
+Kd 0 1 0.466259
+
+newmtl material701
+Kd 0 1 0.469782
+
+newmtl material702
+Kd 0 1 0.473305
+
+newmtl material703
+Kd 0 1 0.476829
+
+newmtl material704
+Kd 0 1 0.480352
+
+newmtl material705
+Kd 0 1 0.483875
+
+newmtl material706
+Kd 0 1 0.487399
+
+newmtl material707
+Kd 0 1 0.490922
+
+newmtl material708
+Kd 0 1 0.494445
+
+newmtl material709
+Kd 0 1 0.497968
+
+newmtl material710
+Kd 0 1 0.501492
+
+newmtl material711
+Kd 0 1 0.505015
+
+newmtl material712
+Kd 0 1 0.508538
+
+newmtl material713
+Kd 0 1 0.512061
+
+newmtl material714
+Kd 0 1 0.515584
+
+newmtl material715
+Kd 0 1 0.519108
+
+newmtl material716
+Kd 0 1 0.522631
+
+newmtl material717
+Kd 0 1 0.526154
+
+newmtl material718
+Kd 0 1 0.529678
+
+newmtl material719
+Kd 0 1 0.533201
+
+newmtl material720
+Kd 0 1 0.536724
+
+newmtl material721
+Kd 0 1 0.540247
+
+newmtl material722
+Kd 0 1 0.543771
+
+newmtl material723
+Kd 0 1 0.547294
+
+newmtl material724
+Kd 0 1 0.550817
+
+newmtl material725
+Kd 0 1 0.55434
+
+newmtl material726
+Kd 0 1 0.557864
+
+newmtl material727
+Kd 0 1 0.561387
+
+newmtl material728
+Kd 0 1 0.56491
+
+newmtl material729
+Kd 0 1 0.568433
+
+newmtl material730
+Kd 0 1 0.571957
+
+newmtl material731
+Kd 0 1 0.57548
+
+newmtl material732
+Kd 0 1 0.579003
+
+newmtl material733
+Kd 0 1 0.582526
+
+newmtl material734
+Kd 0 1 0.58605
+
+newmtl material735
+Kd 0 1 0.589573
+
+newmtl material736
+Kd 0 1 0.593096
+
+newmtl material737
+Kd 0 1 0.596619
+
+newmtl material738
+Kd 0 1 0.600143
+
+newmtl material739
+Kd 0 1 0.603666
+
+newmtl material740
+Kd 0 1 0.607189
+
+newmtl material741
+Kd 0 1 0.610713
+
+newmtl material742
+Kd 0 1 0.614236
+
+newmtl material743
+Kd 0 1 0.617759
+
+newmtl material744
+Kd 0 1 0.621282
+
+newmtl material745
+Kd 0 1 0.624805
+
+newmtl material746
+Kd 0 1 0.628329
+
+newmtl material747
+Kd 0 1 0.631852
+
+newmtl material748
+Kd 0 1 0.635375
+
+newmtl material749
+Kd 0 1 0.638898
+
+newmtl material750
+Kd 0 1 0.642422
+
+newmtl material751
+Kd 0 1 0.645945
+
+newmtl material752
+Kd 0 1 0.649468
+
+newmtl material753
+Kd 0 1 0.652992
+
+newmtl material754
+Kd 0 1 0.656515
+
+newmtl material755
+Kd 0 1 0.660038
+
+newmtl material756
+Kd 0 1 0.663561
+
+newmtl material757
+Kd 0 1 0.667084
+
+newmtl material758
+Kd 0 1 0.670608
+
+newmtl material759
+Kd 0 1 0.674131
+
+newmtl material760
+Kd 0 1 0.677654
+
+newmtl material761
+Kd 0 1 0.681178
+
+newmtl material762
+Kd 0 1 0.684701
+
+newmtl material763
+Kd 0 1 0.688224
+
+newmtl material764
+Kd 0 1 0.691747
+
+newmtl material765
+Kd 0 1 0.695271
+
+newmtl material766
+Kd 0 1 0.698794
+
+newmtl material767
+Kd 0 1 0.702317
+
+newmtl material768
+Kd 0 1 0.70584
+
+newmtl material769
+Kd 0 1 0.709363
+
+newmtl material770
+Kd 0 1 0.712887
+
+newmtl material771
+Kd 0 1 0.71641
+
+newmtl material772
+Kd 0 1 0.719933
+
+newmtl material773
+Kd 0 1 0.723457
+
+newmtl material774
+Kd 0 1 0.72698
+
+newmtl material775
+Kd 0 1 0.730503
+
+newmtl material776
+Kd 0 1 0.734026
+
+newmtl material777
+Kd 0 1 0.73755
+
+newmtl material778
+Kd 0 1 0.741073
+
+newmtl material779
+Kd 0 1 0.744596
+
+newmtl material780
+Kd 0 1 0.748119
+
+newmtl material781
+Kd 0 1 0.751643
+
+newmtl material782
+Kd 0 1 0.755166
+
+newmtl material783
+Kd 0 1 0.758689
+
+newmtl material784
+Kd 0 1 0.762212
+
+newmtl material785
+Kd 0 1 0.765736
+
+newmtl material786
+Kd 0 1 0.769259
+
+newmtl material787
+Kd 0 1 0.772782
+
+newmtl material788
+Kd 0 1 0.776305
+
+newmtl material789
+Kd 0 1 0.779829
+
+newmtl material790
+Kd 0 1 0.783352
+
+newmtl material791
+Kd 0 1 0.786875
+
+newmtl material792
+Kd 0 1 0.790398
+
+newmtl material793
+Kd 0 1 0.793922
+
+newmtl material794
+Kd 0 1 0.797445
+
+newmtl material795
+Kd 0 1 0.800968
+
+newmtl material796
+Kd 0 1 0.804492
+
+newmtl material797
+Kd 0 1 0.808015
+
+newmtl material798
+Kd 0 1 0.811538
+
+newmtl material799
+Kd 0 1 0.815061
+
+newmtl material800
+Kd 0 1 0.818584
+
+newmtl material801
+Kd 0 1 0.822108
+
+newmtl material802
+Kd 0 1 0.825631
+
+newmtl material803
+Kd 0 1 0.829154
+
+newmtl material804
+Kd 0 1 0.832677
+
+newmtl material805
+Kd 0 1 0.836201
+
+newmtl material806
+Kd 0 1 0.839724
+
+newmtl material807
+Kd 0 1 0.843247
+
+newmtl material808
+Kd 0 1 0.846771
+
+newmtl material809
+Kd 0 1 0.850294
+
+newmtl material810
+Kd 0 1 0.853817
+
+newmtl material811
+Kd 0 1 0.85734
+
+newmtl material812
+Kd 0 1 0.860863
+
+newmtl material813
+Kd 0 1 0.864387
+
+newmtl material814
+Kd 0 1 0.86791
+
+newmtl material815
+Kd 0 1 0.871433
+
+newmtl material816
+Kd 0 1 0.874957
+
+newmtl material817
+Kd 0 1 0.87848
+
+newmtl material818
+Kd 0 1 0.882003
+
+newmtl material819
+Kd 0 1 0.885526
+
+newmtl material820
+Kd 0 1 0.88905
+
+newmtl material821
+Kd 0 1 0.892573
+
+newmtl material822
+Kd 0 1 0.896096
+
+newmtl material823
+Kd 0 1 0.899619
+
+newmtl material824
+Kd 0 1 0.903142
+
+newmtl material825
+Kd 0 1 0.906666
+
+newmtl material826
+Kd 0 1 0.910189
+
+newmtl material827
+Kd 0 1 0.913712
+
+newmtl material828
+Kd 0 1 0.917236
+
+newmtl material829
+Kd 0 1 0.920759
+
+newmtl material830
+Kd 0 1 0.924282
+
+newmtl material831
+Kd 0 1 0.927805
+
+newmtl material832
+Kd 0 1 0.931329
+
+newmtl material833
+Kd 0 1 0.934852
+
+newmtl material834
+Kd 0 1 0.938375
+
+newmtl material835
+Kd 0 1 0.941898
+
+newmtl material836
+Kd 0 1 0.945422
+
+newmtl material837
+Kd 0 1 0.948945
+
+newmtl material838
+Kd 0 1 0.952468
+
+newmtl material839
+Kd 0 1 0.955991
+
+newmtl material840
+Kd 0 1 0.959515
+
+newmtl material841
+Kd 0 1 0.963038
+
+newmtl material842
+Kd 0 1 0.966561
+
+newmtl material843
+Kd 0 1 0.970084
+
+newmtl material844
+Kd 0 1 0.973608
+
+newmtl material845
+Kd 0 1 0.977131
+
+newmtl material846
+Kd 0 1 0.980654
+
+newmtl material847
+Kd 0 1 0.984177
+
+newmtl material848
+Kd 0 1 0.987701
+
+newmtl material849
+Kd 0 1 0.991224
+
+newmtl material850
+Kd 0 1 0.994747
+
+newmtl material851
+Kd 0 1 0.998271
+
+newmtl material852
+Kd 0 0.998206 1
+
+newmtl material853
+Kd 0 0.994683 1
+
+newmtl material854
+Kd 0 0.99116 1
+
+newmtl material855
+Kd 0 0.987637 1
+
+newmtl material856
+Kd 0 0.984113 1
+
+newmtl material857
+Kd 0 0.98059 1
+
+newmtl material858
+Kd 0 0.977067 1
+
+newmtl material859
+Kd 0 0.973544 1
+
+newmtl material860
+Kd 0 0.97002 1
+
+newmtl material861
+Kd 0 0.966497 1
+
+newmtl material862
+Kd 0 0.962974 1
+
+newmtl material863
+Kd 0 0.95945 1
+
+newmtl material864
+Kd 0 0.955927 1
+
+newmtl material865
+Kd 0 0.952404 1
+
+newmtl material866
+Kd 0 0.948881 1
+
+newmtl material867
+Kd 0 0.945358 1
+
+newmtl material868
+Kd 0 0.941834 1
+
+newmtl material869
+Kd 0 0.938311 1
+
+newmtl material870
+Kd 0 0.934788 1
+
+newmtl material871
+Kd 0 0.931264 1
+
+newmtl material872
+Kd 0 0.927741 1
+
+newmtl material873
+Kd 0 0.924218 1
+
+newmtl material874
+Kd 0 0.920695 1
+
+newmtl material875
+Kd 0 0.917171 1
+
+newmtl material876
+Kd 0 0.913648 1
+
+newmtl material877
+Kd 0 0.910125 1
+
+newmtl material878
+Kd 0 0.906602 1
+
+newmtl material879
+Kd 0 0.903079 1
+
+newmtl material880
+Kd 0 0.899555 1
+
+newmtl material881
+Kd 0 0.896032 1
+
+newmtl material882
+Kd 0 0.892509 1
+
+newmtl material883
+Kd 0 0.888985 1
+
+newmtl material884
+Kd 0 0.885462 1
+
+newmtl material885
+Kd 0 0.881939 1
+
+newmtl material886
+Kd 0 0.878416 1
+
+newmtl material887
+Kd 0 0.874892 1
+
+newmtl material888
+Kd 0 0.871369 1
+
+newmtl material889
+Kd 0 0.867846 1
+
+newmtl material890
+Kd 0 0.864323 1
+
+newmtl material891
+Kd 0 0.860799 1
+
+newmtl material892
+Kd 0 0.857276 1
+
+newmtl material893
+Kd 0 0.853753 1
+
+newmtl material894
+Kd 0 0.85023 1
+
+newmtl material895
+Kd 0 0.846706 1
+
+newmtl material896
+Kd 0 0.843183 1
+
+newmtl material897
+Kd 0 0.83966 1
+
+newmtl material898
+Kd 0 0.836137 1
+
+newmtl material899
+Kd 0 0.832613 1
+
+newmtl material900
+Kd 0 0.82909 1
+
+newmtl material901
+Kd 0 0.825567 1
+
+newmtl material902
+Kd 0 0.822044 1
+
+newmtl material903
+Kd 0 0.81852 1
+
+newmtl material904
+Kd 0 0.814997 1
+
+newmtl material905
+Kd 0 0.811474 1
+
+newmtl material906
+Kd 0 0.80795 1
+
+newmtl material907
+Kd 0 0.804427 1
+
+newmtl material908
+Kd 0 0.800904 1
+
+newmtl material909
+Kd 0 0.797381 1
+
+newmtl material910
+Kd 0 0.793858 1
+
+newmtl material911
+Kd 0 0.790334 1
+
+newmtl material912
+Kd 0 0.786811 1
+
+newmtl material913
+Kd 0 0.783288 1
+
+newmtl material914
+Kd 0 0.779765 1
+
+newmtl material915
+Kd 0 0.776241 1
+
+newmtl material916
+Kd 0 0.772718 1
+
+newmtl material917
+Kd 0 0.769195 1
+
+newmtl material918
+Kd 0 0.765671 1
+
+newmtl material919
+Kd 0 0.762148 1
+
+newmtl material920
+Kd 0 0.758625 1
+
+newmtl material921
+Kd 0 0.755102 1
+
+newmtl material922
+Kd 0 0.751579 1
+
+newmtl material923
+Kd 0 0.748055 1
+
+newmtl material924
+Kd 0 0.744532 1
+
+newmtl material925
+Kd 0 0.741009 1
+
+newmtl material926
+Kd 0 0.737485 1
+
+newmtl material927
+Kd 0 0.733962 1
+
+newmtl material928
+Kd 0 0.730439 1
+
+newmtl material929
+Kd 0 0.726916 1
+
+newmtl material930
+Kd 0 0.723392 1
+
+newmtl material931
+Kd 0 0.719869 1
+
+newmtl material932
+Kd 0 0.716346 1
+
+newmtl material933
+Kd 0 0.712823 1
+
+newmtl material934
+Kd 0 0.7093 1
+
+newmtl material935
+Kd 0 0.705776 1
+
+newmtl material936
+Kd 0 0.702253 1
+
+newmtl material937
+Kd 0 0.69873 1
+
+newmtl material938
+Kd 0 0.695206 1
+
+newmtl material939
+Kd 0 0.691683 1
+
+newmtl material940
+Kd 0 0.68816 1
+
+newmtl material941
+Kd 0 0.684637 1
+
+newmtl material942
+Kd 0 0.681113 1
+
+newmtl material943
+Kd 0 0.67759 1
+
+newmtl material944
+Kd 0 0.674067 1
+
+newmtl material945
+Kd 0 0.670544 1
+
+newmtl material946
+Kd 0 0.66702 1
+
+newmtl material947
+Kd 0 0.663497 1
+
+newmtl material948
+Kd 0 0.659974 1
+
+newmtl material949
+Kd 0 0.656451 1
+
+newmtl material950
+Kd 0 0.652927 1
+
+newmtl material951
+Kd 0 0.649404 1
+
+newmtl material952
+Kd 0 0.645881 1
+
+newmtl material953
+Kd 0 0.642358 1
+
+newmtl material954
+Kd 0 0.638834 1
+
+newmtl material955
+Kd 0 0.635311 1
+
+newmtl material956
+Kd 0 0.631788 1
+
+newmtl material957
+Kd 0 0.628265 1
+
+newmtl material958
+Kd 0 0.624741 1
+
+newmtl material959
+Kd 0 0.621218 1
+
+newmtl material960
+Kd 0 0.617695 1
+
+newmtl material961
+Kd 0 0.614172 1
+
+newmtl material962
+Kd 0 0.610648 1
+
+newmtl material963
+Kd 0 0.607125 1
+
+newmtl material964
+Kd 0 0.603602 1
+
+newmtl material965
+Kd 0 0.600079 1
+
+newmtl material966
+Kd 0 0.596555 1
+
+newmtl material967
+Kd 0 0.593032 1
+
+newmtl material968
+Kd 0 0.589509 1
+
+newmtl material969
+Kd 0 0.585986 1
+
+newmtl material970
+Kd 0 0.582462 1
+
+newmtl material971
+Kd 0 0.578939 1
+
+newmtl material972
+Kd 0 0.575416 1
+
+newmtl material973
+Kd 0 0.571892 1
+
+newmtl material974
+Kd 0 0.568369 1
+
+newmtl material975
+Kd 0 0.564846 1
+
+newmtl material976
+Kd 0 0.561323 1
+
+newmtl material977
+Kd 0 0.5578 1
+
+newmtl material978
+Kd 0 0.554276 1
+
+newmtl material979
+Kd 0 0.550753 1
+
+newmtl material980
+Kd 0 0.54723 1
+
+newmtl material981
+Kd 0 0.543706 1
+
+newmtl material982
+Kd 0 0.540183 1
+
+newmtl material983
+Kd 0 0.53666 1
+
+newmtl material984
+Kd 0 0.533137 1
+
+newmtl material985
+Kd 0 0.529613 1
+
+newmtl material986
+Kd 0 0.52609 1
+
+newmtl material987
+Kd 0 0.522567 1
+
+newmtl material988
+Kd 0 0.519044 1
+
+newmtl material989
+Kd 0 0.515521 1
+
+newmtl material990
+Kd 0 0.511997 1
+
+newmtl material991
+Kd 0 0.508474 1
+
+newmtl material992
+Kd 0 0.504951 1
+
+newmtl material993
+Kd 0 0.501427 1
+
+newmtl material994
+Kd 0 0.497904 1
+
+newmtl material995
+Kd 0 0.494381 1
+
+newmtl material996
+Kd 0 0.490858 1
+
+newmtl material997
+Kd 0 0.487334 1
+
+newmtl material998
+Kd 0 0.483811 1
+
+newmtl material999
+Kd 0 0.480288 1
+
+newmtl material1000
+Kd 0 0.476765 1
+
+newmtl material1001
+Kd 0 0.473241 1
+
+newmtl material1002
+Kd 0 0.469718 1
+
+newmtl material1003
+Kd 0 0.466195 1
+
+newmtl material1004
+Kd 0 0.462672 1
+
+newmtl material1005
+Kd 0 0.459148 1
+
+newmtl material1006
+Kd 0 0.455625 1
+
+newmtl material1007
+Kd 0 0.452102 1
+
+newmtl material1008
+Kd 0 0.448579 1
+
+newmtl material1009
+Kd 0 0.445055 1
+
+newmtl material1010
+Kd 0 0.441532 1
+
+newmtl material1011
+Kd 0 0.438009 1
+
+newmtl material1012
+Kd 0 0.434486 1
+
+newmtl material1013
+Kd 0 0.430962 1
+
+newmtl material1014
+Kd 0 0.427439 1
+
+newmtl material1015
+Kd 0 0.423916 1
+
+newmtl material1016
+Kd 0 0.420393 1
+
+newmtl material1017
+Kd 0 0.416869 1
+
+newmtl material1018
+Kd 0 0.413346 1
+
+newmtl material1019
+Kd 0 0.409823 1
+
+newmtl material1020
+Kd 0 0.4063 1
+
+newmtl material1021
+Kd 0 0.402776 1
+
+newmtl material1022
+Kd 0 0.399253 1
+
+newmtl material1023
+Kd 0 0.39573 1
+
+newmtl material1024
+Kd 0 0.392207 1
+
+newmtl material1025
+Kd 0 0.388683 1
+
+newmtl material1026
+Kd 0 0.38516 1
+
+newmtl material1027
+Kd 0 0.381637 1
+
+newmtl material1028
+Kd 0 0.378114 1
+
+newmtl material1029
+Kd 0 0.37459 1
+
+newmtl material1030
+Kd 0 0.371067 1
+
+newmtl material1031
+Kd 0 0.367544 1
+
+newmtl material1032
+Kd 0 0.364021 1
+
+newmtl material1033
+Kd 0 0.360497 1
+
+newmtl material1034
+Kd 0 0.356974 1
+
+newmtl material1035
+Kd 0 0.353451 1
+
+newmtl material1036
+Kd 0 0.349927 1
+
+newmtl material1037
+Kd 0 0.346404 1
+
+newmtl material1038
+Kd 0 0.342881 1
+
+newmtl material1039
+Kd 0 0.339358 1
+
+newmtl material1040
+Kd 0 0.335835 1
+
+newmtl material1041
+Kd 0 0.332311 1
+
+newmtl material1042
+Kd 0 0.328788 1
+
+newmtl material1043
+Kd 0 0.325265 1
+
+newmtl material1044
+Kd 0 0.321742 1
+
+newmtl material1045
+Kd 0 0.318218 1
+
+newmtl material1046
+Kd 0 0.314695 1
+
+newmtl material1047
+Kd 0 0.311172 1
+
+newmtl material1048
+Kd 0 0.307648 1
+
+newmtl material1049
+Kd 0 0.304125 1
+
+newmtl material1050
+Kd 0 0.300602 1
+
+newmtl material1051
+Kd 0 0.297079 1
+
+newmtl material1052
+Kd 0 0.293555 1
+
+newmtl material1053
+Kd 0 0.290032 1
+
+newmtl material1054
+Kd 0 0.286509 1
+
+newmtl material1055
+Kd 0 0.282986 1
+
+newmtl material1056
+Kd 0 0.279462 1
+
+newmtl material1057
+Kd 0 0.275939 1
+
+newmtl material1058
+Kd 0 0.272416 1
+
+newmtl material1059
+Kd 0 0.268893 1
+
+newmtl material1060
+Kd 0 0.265369 1
+
+newmtl material1061
+Kd 0 0.261846 1
+
+newmtl material1062
+Kd 0 0.258323 1
+
+newmtl material1063
+Kd 0 0.2548 1
+
+newmtl material1064
+Kd 0 0.251276 1
+
+newmtl material1065
+Kd 0 0.247753 1
+
+newmtl material1066
+Kd 0 0.24423 1
+
+newmtl material1067
+Kd 0 0.240707 1
+
+newmtl material1068
+Kd 0 0.237183 1
+
+newmtl material1069
+Kd 0 0.23366 1
+
+newmtl material1070
+Kd 0 0.230137 1
+
+newmtl material1071
+Kd 0 0.226614 1
+
+newmtl material1072
+Kd 0 0.22309 1
+
+newmtl material1073
+Kd 0 0.219567 1
+
+newmtl material1074
+Kd 0 0.216044 1
+
+newmtl material1075
+Kd 0 0.212521 1
+
+newmtl material1076
+Kd 0 0.208997 1
+
+newmtl material1077
+Kd 0 0.205474 1
+
+newmtl material1078
+Kd 0 0.201951 1
+
+newmtl material1079
+Kd 0 0.198428 1
+
+newmtl material1080
+Kd 0 0.194904 1
+
+newmtl material1081
+Kd 0 0.191381 1
+
+newmtl material1082
+Kd 0 0.187858 1
+
+newmtl material1083
+Kd 0 0.184335 1
+
+newmtl material1084
+Kd 0 0.180811 1
+
+newmtl material1085
+Kd 0 0.177288 1
+
+newmtl material1086
+Kd 0 0.173765 1
+
+newmtl material1087
+Kd 0 0.170242 1
+
+newmtl material1088
+Kd 0 0.166718 1
+
+newmtl material1089
+Kd 0 0.163195 1
+
+newmtl material1090
+Kd 0 0.159672 1
+
+newmtl material1091
+Kd 0 0.156148 1
+
+newmtl material1092
+Kd 0 0.152625 1
+
+newmtl material1093
+Kd 0 0.149102 1
+
+newmtl material1094
+Kd 0 0.145579 1
+
+newmtl material1095
+Kd 0 0.142056 1
+
+newmtl material1096
+Kd 0 0.138532 1
+
+newmtl material1097
+Kd 0 0.135009 1
+
+newmtl material1098
+Kd 0 0.131486 1
+
+newmtl material1099
+Kd 0 0.127963 1
+
+newmtl material1100
+Kd 0 0.124439 1
+
+newmtl material1101
+Kd 0 0.120916 1
+
+newmtl material1102
+Kd 0 0.117393 1
+
+newmtl material1103
+Kd 0 0.113869 1
+
+newmtl material1104
+Kd 0 0.110346 1
+
+newmtl material1105
+Kd 0 0.106823 1
+
+newmtl material1106
+Kd 0 0.1033 1
+
+newmtl material1107
+Kd 0 0.0997765 1
+
+newmtl material1108
+Kd 0 0.0962532 1
+
+newmtl material1109
+Kd 0 0.09273 1
+
+newmtl material1110
+Kd 0 0.0892067 1
+
+newmtl material1111
+Kd 0 0.0856833 1
+
+newmtl material1112
+Kd 0 0.0821602 1
+
+newmtl material1113
+Kd 0 0.0786369 1
+
+newmtl material1114
+Kd 0 0.0751138 1
+
+newmtl material1115
+Kd 0 0.0715904 1
+
+newmtl material1116
+Kd 0 0.0680671 1
+
+newmtl material1117
+Kd 0 0.064544 1
+
+newmtl material1118
+Kd 0 0.0610206 1
+
+newmtl material1119
+Kd 0 0.0574975 1
+
+newmtl material1120
+Kd 0 0.0539742 1
+
+newmtl material1121
+Kd 0 0.0504508 1
+
+newmtl material1122
+Kd 0 0.0469277 1
+
+newmtl material1123
+Kd 0 0.0434043 1
+
+newmtl material1124
+Kd 0 0.0398812 1
+
+newmtl material1125
+Kd 0 0.0363579 1
+
+newmtl material1126
+Kd 0 0.0328345 1
+
+newmtl material1127
+Kd 0 0.0293114 1
+
+newmtl material1128
+Kd 0 0.0257881 1
+
+newmtl material1129
+Kd 0 0.022265 1
+
+newmtl material1130
+Kd 0 0.0187416 1
+
+newmtl material1131
+Kd 0 0.0152183 1
+
+newmtl material1132
+Kd 0 0.0116951 1
+
+newmtl material1133
+Kd 0 0.0081718 1
+
+newmtl material1134
+Kd 0 0.00464869 1
+
+newmtl material1135
+Kd 0 0.00112534 1
+
+newmtl material1136
+Kd 0.00239801 0 1
+
+newmtl material1137
+Kd 0.00592136 0 1
+
+newmtl material1138
+Kd 0.00944424 0 1
+
+newmtl material1139
+Kd 0.0129676 0 1
+
+newmtl material1140
+Kd 0.0164909 0 1
+
+newmtl material1141
+Kd 0.0200143 0 1
+
+newmtl material1142
+Kd 0.0235376 0 1
+
+newmtl material1143
+Kd 0.0270605 0 1
+
+newmtl material1144
+Kd 0.0305839 0 1
+
+newmtl material1145
+Kd 0.0341072 0 1
+
+newmtl material1146
+Kd 0.0376306 0 1
+
+newmtl material1147
+Kd 0.0411539 0 1
+
+newmtl material1148
+Kd 0.0446768 0 1
+
+newmtl material1149
+Kd 0.0482001 0 1
+
+newmtl material1150
+Kd 0.0517235 0 1
+
+newmtl material1151
+Kd 0.0552468 0 1
+
+newmtl material1152
+Kd 0.0587702 0 1
+
+newmtl material1153
+Kd 0.0622931 0 1
+
+newmtl material1154
+Kd 0.0658164 0 1
+
+newmtl material1155
+Kd 0.0693398 0 1
+
+newmtl material1156
+Kd 0.0728631 0 1
+
+newmtl material1157
+Kd 0.0763865 0 1
+
+newmtl material1158
+Kd 0.0799093 0 1
+
+newmtl material1159
+Kd 0.0834327 0 1
+
+newmtl material1160
+Kd 0.086956 0 1
+
+newmtl material1161
+Kd 0.0904794 0 1
+
+newmtl material1162
+Kd 0.0940027 0 1
+
+newmtl material1163
+Kd 0.0975256 0 1
+
+newmtl material1164
+Kd 0.101049 0 1
+
+newmtl material1165
+Kd 0.104572 0 1
+
+newmtl material1166
+Kd 0.108096 0 1
+
+newmtl material1167
+Kd 0.111619 0 1
+
+newmtl material1168
+Kd 0.115142 0 1
+
+newmtl material1169
+Kd 0.118665 0 1
+
+newmtl material1170
+Kd 0.122189 0 1
+
+newmtl material1171
+Kd 0.125712 0 1
+
+newmtl material1172
+Kd 0.129235 0 1
+
+newmtl material1173
+Kd 0.132758 0 1
+
+newmtl material1174
+Kd 0.136281 0 1
+
+newmtl material1175
+Kd 0.139805 0 1
+
+newmtl material1176
+Kd 0.143328 0 1
+
+newmtl material1177
+Kd 0.146852 0 1
+
+newmtl material1178
+Kd 0.150374 0 1
+
+newmtl material1179
+Kd 0.153898 0 1
+
+newmtl material1180
+Kd 0.157421 0 1
+
+newmtl material1181
+Kd 0.160944 0 1
+
+newmtl material1182
+Kd 0.164468 0 1
+
+newmtl material1183
+Kd 0.167991 0 1
+
+newmtl material1184
+Kd 0.171514 0 1
+
+newmtl material1185
+Kd 0.175037 0 1
+
+newmtl material1186
+Kd 0.178561 0 1
+
+newmtl material1187
+Kd 0.182084 0 1
+
+newmtl material1188
+Kd 0.185607 0 1
+
+newmtl material1189
+Kd 0.18913 0 1
+
+newmtl material1190
+Kd 0.192654 0 1
+
+newmtl material1191
+Kd 0.196177 0 1
+
+newmtl material1192
+Kd 0.1997 0 1
+
+newmtl material1193
+Kd 0.203223 0 1
+
+newmtl material1194
+Kd 0.206747 0 1
+
+newmtl material1195
+Kd 0.21027 0 1
+
+newmtl material1196
+Kd 0.213793 0 1
+
+newmtl material1197
+Kd 0.217317 0 1
+
+newmtl material1198
+Kd 0.22084 0 1
+
+newmtl material1199
+Kd 0.224363 0 1
+
+newmtl material1200
+Kd 0.227886 0 1
+
+newmtl material1201
+Kd 0.23141 0 1
+
+newmtl material1202
+Kd 0.234933 0 1
+
+newmtl material1203
+Kd 0.238456 0 1
+
+newmtl material1204
+Kd 0.241979 0 1
+
+newmtl material1205
+Kd 0.245502 0 1
+
+newmtl material1206
+Kd 0.249026 0 1
+
+newmtl material1207
+Kd 0.252549 0 1
+
+newmtl material1208
+Kd 0.256072 0 1
+
+newmtl material1209
+Kd 0.259595 0 1
+
+newmtl material1210
+Kd 0.263119 0 1
+
+newmtl material1211
+Kd 0.266642 0 1
+
+newmtl material1212
+Kd 0.270165 0 1
+
+newmtl material1213
+Kd 0.273688 0 1
+
+newmtl material1214
+Kd 0.277212 0 1
+
+newmtl material1215
+Kd 0.280735 0 1
+
+newmtl material1216
+Kd 0.284258 0 1
+
+newmtl material1217
+Kd 0.287781 0 1
+
+newmtl material1218
+Kd 0.291305 0 1
+
+newmtl material1219
+Kd 0.294828 0 1
+
+newmtl material1220
+Kd 0.298351 0 1
+
+newmtl material1221
+Kd 0.301874 0 1
+
+newmtl material1222
+Kd 0.305398 0 1
+
+newmtl material1223
+Kd 0.308921 0 1
+
+newmtl material1224
+Kd 0.312444 0 1
+
+newmtl material1225
+Kd 0.315967 0 1
+
+newmtl material1226
+Kd 0.31949 0 1
+
+newmtl material1227
+Kd 0.323014 0 1
+
+newmtl material1228
+Kd 0.326537 0 1
+
+newmtl material1229
+Kd 0.33006 0 1
+
+newmtl material1230
+Kd 0.333583 0 1
+
+newmtl material1231
+Kd 0.337107 0 1
+
+newmtl material1232
+Kd 0.34063 0 1
+
+newmtl material1233
+Kd 0.344153 0 1
+
+newmtl material1234
+Kd 0.347677 0 1
+
+newmtl material1235
+Kd 0.3512 0 1
+
+newmtl material1236
+Kd 0.354723 0 1
+
+newmtl material1237
+Kd 0.358246 0 1
+
+newmtl material1238
+Kd 0.36177 0 1
+
+newmtl material1239
+Kd 0.365293 0 1
+
+newmtl material1240
+Kd 0.368816 0 1
+
+newmtl material1241
+Kd 0.372339 0 1
+
+newmtl material1242
+Kd 0.375863 0 1
+
+newmtl material1243
+Kd 0.379386 0 1
+
+newmtl material1244
+Kd 0.382909 0 1
+
+newmtl material1245
+Kd 0.386432 0 1
+
+newmtl material1246
+Kd 0.389956 0 1
+
+newmtl material1247
+Kd 0.393479 0 1
+
+newmtl material1248
+Kd 0.397002 0 1
+
+newmtl material1249
+Kd 0.400526 0 1
+
+newmtl material1250
+Kd 0.404048 0 1
+
+newmtl material1251
+Kd 0.407572 0 1
+
+newmtl material1252
+Kd 0.411095 0 1
+
+newmtl material1253
+Kd 0.414618 0 1
+
+newmtl material1254
+Kd 0.418142 0 1
+
+newmtl material1255
+Kd 0.421665 0 1
+
+newmtl material1256
+Kd 0.425188 0 1
+
+newmtl material1257
+Kd 0.428711 0 1
+
+newmtl material1258
+Kd 0.432235 0 1
+
+newmtl material1259
+Kd 0.435758 0 1
+
+newmtl material1260
+Kd 0.439281 0 1
+
+newmtl material1261
+Kd 0.442804 0 1
+
+newmtl material1262
+Kd 0.446328 0 1
+
+newmtl material1263
+Kd 0.449851 0 1
+
+newmtl material1264
+Kd 0.453374 0 1
+
+newmtl material1265
+Kd 0.456897 0 1
+
+newmtl material1266
+Kd 0.460421 0 1
+
+newmtl material1267
+Kd 0.463944 0 1
+
+newmtl material1268
+Kd 0.467467 0 1
+
+newmtl material1269
+Kd 0.470991 0 1
+
+newmtl material1270
+Kd 0.474514 0 1
+
+newmtl material1271
+Kd 0.478037 0 1
+
+newmtl material1272
+Kd 0.48156 0 1
+
+newmtl material1273
+Kd 0.485084 0 1
+
+newmtl material1274
+Kd 0.488607 0 1
+
+newmtl material1275
+Kd 0.49213 0 1
+
+newmtl material1276
+Kd 0.495653 0 1
+
+newmtl material1277
+Kd 0.499177 0 1
+
+newmtl material1278
+Kd 0.5027 0 1
+
+newmtl material1279
+Kd 0.506223 0 1
+
+newmtl material1280
+Kd 0.509746 0 1
+
+newmtl material1281
+Kd 0.513269 0 1
+
+newmtl material1282
+Kd 0.516793 0 1
+
+newmtl material1283
+Kd 0.520316 0 1
+
+newmtl material1284
+Kd 0.523839 0 1
+
+newmtl material1285
+Kd 0.527362 0 1
+
+newmtl material1286
+Kd 0.530886 0 1
+
+newmtl material1287
+Kd 0.534409 0 1
+
+newmtl material1288
+Kd 0.537932 0 1
+
+newmtl material1289
+Kd 0.541456 0 1
+
+newmtl material1290
+Kd 0.544979 0 1
+
+newmtl material1291
+Kd 0.548502 0 1
+
+newmtl material1292
+Kd 0.552025 0 1
+
+newmtl material1293
+Kd 0.555549 0 1
+
+newmtl material1294
+Kd 0.559072 0 1
+
+newmtl material1295
+Kd 0.562595 0 1
+
+newmtl material1296
+Kd 0.566118 0 1
+
+newmtl material1297
+Kd 0.569642 0 1
+
+newmtl material1298
+Kd 0.573165 0 1
+
+newmtl material1299
+Kd 0.576688 0 1
+
+newmtl material1300
+Kd 0.580211 0 1
+
+newmtl material1301
+Kd 0.583735 0 1
+
+newmtl material1302
+Kd 0.587258 0 1
+
+newmtl material1303
+Kd 0.590781 0 1
+
+newmtl material1304
+Kd 0.594305 0 1
+
+newmtl material1305
+Kd 0.597827 0 1
+
+newmtl material1306
+Kd 0.601351 0 1
+
+newmtl material1307
+Kd 0.604874 0 1
+
+newmtl material1308
+Kd 0.608397 0 1
+
+newmtl material1309
+Kd 0.611921 0 1
+
+newmtl material1310
+Kd 0.615444 0 1
+
+newmtl material1311
+Kd 0.618967 0 1
+
+newmtl material1312
+Kd 0.62249 0 1
+
+newmtl material1313
+Kd 0.626014 0 1
+
+newmtl material1314
+Kd 0.629537 0 1
+
+newmtl material1315
+Kd 0.63306 0 1
+
+newmtl material1316
+Kd 0.636583 0 1
+
+newmtl material1317
+Kd 0.640107 0 1
+
+newmtl material1318
+Kd 0.64363 0 1
+
+newmtl material1319
+Kd 0.647153 0 1
+
+newmtl material1320
+Kd 0.650676 0 1
+
+newmtl material1321
+Kd 0.6542 0 1
+
+newmtl material1322
+Kd 0.657723 0 1
+
+newmtl material1323
+Kd 0.661246 0 1
+
+newmtl material1324
+Kd 0.66477 0 1
+
+newmtl material1325
+Kd 0.668293 0 1
+
+newmtl material1326
+Kd 0.671816 0 1
+
+newmtl material1327
+Kd 0.675339 0 1
+
+newmtl material1328
+Kd 0.678863 0 1
+
+newmtl material1329
+Kd 0.682386 0 1
+
+newmtl material1330
+Kd 0.685909 0 1
+
+newmtl material1331
+Kd 0.689432 0 1
+
+newmtl material1332
+Kd 0.692955 0 1
+
+newmtl material1333
+Kd 0.696479 0 1
+
+newmtl material1334
+Kd 0.700002 0 1
+
+newmtl material1335
+Kd 0.703525 0 1
+
+newmtl material1336
+Kd 0.707048 0 1
+
+newmtl material1337
+Kd 0.710572 0 1
+
+newmtl material1338
+Kd 0.714095 0 1
+
+newmtl material1339
+Kd 0.717618 0 1
+
+newmtl material1340
+Kd 0.721141 0 1
+
+newmtl material1341
+Kd 0.724665 0 1
+
+newmtl material1342
+Kd 0.728188 0 1
+
+newmtl material1343
+Kd 0.731711 0 1
+
+newmtl material1344
+Kd 0.735235 0 1
+
+newmtl material1345
+Kd 0.738758 0 1
+
+newmtl material1346
+Kd 0.742281 0 1
+
+newmtl material1347
+Kd 0.745804 0 1
+
+newmtl material1348
+Kd 0.749328 0 1
+
+newmtl material1349
+Kd 0.752851 0 1
+
+newmtl material1350
+Kd 0.756374 0 1
+
+newmtl material1351
+Kd 0.759897 0 1
+
+newmtl material1352
+Kd 0.763421 0 1
+
+newmtl material1353
+Kd 0.766944 0 1
+
+newmtl material1354
+Kd 0.770467 0 1
+
+newmtl material1355
+Kd 0.77399 0 1
+
+newmtl material1356
+Kd 0.777514 0 1
+
+newmtl material1357
+Kd 0.781037 0 1
+
+newmtl material1358
+Kd 0.78456 0 1
+
+newmtl material1359
+Kd 0.788084 0 1
+
+newmtl material1360
+Kd 0.791606 0 1
+
+newmtl material1361
+Kd 0.79513 0 1
+
+newmtl material1362
+Kd 0.798653 0 1
+
+newmtl material1363
+Kd 0.802176 0 1
+
+newmtl material1364
+Kd 0.8057 0 1
+
+newmtl material1365
+Kd 0.809223 0 1
+
+newmtl material1366
+Kd 0.812746 0 1
+
+newmtl material1367
+Kd 0.816269 0 1
+
+newmtl material1368
+Kd 0.819793 0 1
+
+newmtl material1369
+Kd 0.823316 0 1
+
+newmtl material1370
+Kd 0.826839 0 1
+
+newmtl material1371
+Kd 0.830362 0 1
+
+newmtl material1372
+Kd 0.833886 0 1
+
+newmtl material1373
+Kd 0.837409 0 1
+
+newmtl material1374
+Kd 0.840932 0 1
+
+newmtl material1375
+Kd 0.844455 0 1
+
+newmtl material1376
+Kd 0.847979 0 1
+
+newmtl material1377
+Kd 0.851502 0 1
+
+newmtl material1378
+Kd 0.855025 0 1
+
+newmtl material1379
+Kd 0.858549 0 1
+
+newmtl material1380
+Kd 0.862072 0 1
+
+newmtl material1381
+Kd 0.865595 0 1
+
+newmtl material1382
+Kd 0.869118 0 1
+
+newmtl material1383
+Kd 0.872642 0 1
+
+newmtl material1384
+Kd 0.876165 0 1
+
+newmtl material1385
+Kd 0.879688 0 1
+
+newmtl material1386
+Kd 0.883211 0 1
+
+newmtl material1387
+Kd 0.886734 0 1
+
+newmtl material1388
+Kd 0.890258 0 1
+
+newmtl material1389
+Kd 0.893781 0 1
+
+newmtl material1390
+Kd 0.897304 0 1
+
+newmtl material1391
+Kd 0.900827 0 1
+
+newmtl material1392
+Kd 0.904351 0 1
+
+newmtl material1393
+Kd 0.907874 0 1
+
+newmtl material1394
+Kd 0.911397 0 1
+
+newmtl material1395
+Kd 0.91492 0 1
+
+newmtl material1396
+Kd 0.918444 0 1
+
+newmtl material1397
+Kd 0.921967 0 1
+
+newmtl material1398
+Kd 0.92549 0 1
+
+newmtl material1399
+Kd 0.929014 0 1
+
+newmtl material1400
+Kd 0.932537 0 1
+
+newmtl material1401
+Kd 0.93606 0 1
+
+newmtl material1402
+Kd 0.939583 0 1
+
+newmtl material1403
+Kd 0.943107 0 1
+
+newmtl material1404
+Kd 0.94663 0 1
+
+newmtl material1405
+Kd 0.950153 0 1
+
+newmtl material1406
+Kd 0.953676 0 1
+
+newmtl material1407
+Kd 0.9572 0 1
+
+newmtl material1408
+Kd 0.960723 0 1
+
+newmtl material1409
+Kd 0.964246 0 1
+
+newmtl material1410
+Kd 0.967769 0 1
+
+newmtl material1411
+Kd 0.971292 0 1
+
+newmtl material1412
+Kd 0.974816 0 1
+
+newmtl material1413
+Kd 0.978339 0 1
+
+newmtl material1414
+Kd 0.981863 0 1
+
+newmtl material1415
+Kd 0.985385 0 1
+
+newmtl material1416
+Kd 0.988909 0 1
+
+newmtl material1417
+Kd 0.992432 0 1
+
+newmtl material1418
+Kd 0.995955 0 1
+
+newmtl material1419
+Kd 0.999479 0 1
+
+newmtl material1420
+Kd 1 0 0.996998
+
+newmtl material1421
+Kd 1 0 0.993475
+
+newmtl material1422
+Kd 1 0 0.989952
+
+newmtl material1423
+Kd 1 0 0.986428
+
+newmtl material1424
+Kd 1 0 0.982905
+
+newmtl material1425
+Kd 1 0 0.979382
+
+newmtl material1426
+Kd 1 0 0.975859
+
+newmtl material1427
+Kd 1 0 0.972335
+
+newmtl material1428
+Kd 1 0 0.968812
+
+newmtl material1429
+Kd 1 0 0.965289
+
+newmtl material1430
+Kd 1 0 0.961766
+
+newmtl material1431
+Kd 1 0 0.958242
+
+newmtl material1432
+Kd 1 0 0.954719
+
+newmtl material1433
+Kd 1 0 0.951196
+
+newmtl material1434
+Kd 1 0 0.947672
+
+newmtl material1435
+Kd 1 0 0.944149
+
+newmtl material1436
+Kd 1 0 0.940626
+
+newmtl material1437
+Kd 1 0 0.937103
+
+newmtl material1438
+Kd 1 0 0.933579
+
+newmtl material1439
+Kd 1 0 0.930056
+
+newmtl material1440
+Kd 1 0 0.926533
+
+newmtl material1441
+Kd 1 0 0.92301
+
+newmtl material1442
+Kd 1 0 0.919487
+
+newmtl material1443
+Kd 1 0 0.915963
+
+newmtl material1444
+Kd 1 0 0.91244
+
+newmtl material1445
+Kd 1 0 0.908917
+
+newmtl material1446
+Kd 1 0 0.905394
+
+newmtl material1447
+Kd 1 0 0.90187
+
+newmtl material1448
+Kd 1 0 0.898347
+
+newmtl material1449
+Kd 1 0 0.894824
+
+newmtl material1450
+Kd 1 0 0.891301
+
+newmtl material1451
+Kd 1 0 0.887777
+
+newmtl material1452
+Kd 1 0 0.884254
+
+newmtl material1453
+Kd 1 0 0.880731
+
+newmtl material1454
+Kd 1 0 0.877207
+
+newmtl material1455
+Kd 1 0 0.873684
+
+newmtl material1456
+Kd 1 0 0.870161
+
+newmtl material1457
+Kd 1 0 0.866638
+
+newmtl material1458
+Kd 1 0 0.863114
+
+newmtl material1459
+Kd 1 0 0.859591
+
+newmtl material1460
+Kd 1 0 0.856068
+
+newmtl material1461
+Kd 1 0 0.852545
+
+newmtl material1462
+Kd 1 0 0.849021
+
+newmtl material1463
+Kd 1 0 0.845498
+
+newmtl material1464
+Kd 1 0 0.841975
+
+newmtl material1465
+Kd 1 0 0.838452
+
+newmtl material1466
+Kd 1 0 0.834929
+
+newmtl material1467
+Kd 1 0 0.831405
+
+newmtl material1468
+Kd 1 0 0.827882
+
+newmtl material1469
+Kd 1 0 0.824358
+
+newmtl material1470
+Kd 1 0 0.820836
+
+newmtl material1471
+Kd 1 0 0.817312
+
+newmtl material1472
+Kd 1 0 0.813789
+
+newmtl material1473
+Kd 1 0 0.810266
+
+newmtl material1474
+Kd 1 0 0.806742
+
+newmtl material1475
+Kd 1 0 0.803219
+
+newmtl material1476
+Kd 1 0 0.799696
+
+newmtl material1477
+Kd 1 0 0.796173
+
+newmtl material1478
+Kd 1 0 0.792649
+
+newmtl material1479
+Kd 1 0 0.789126
+
+newmtl material1480
+Kd 1 0 0.785603
+
+newmtl material1481
+Kd 1 0 0.78208
+
+newmtl material1482
+Kd 1 0 0.778556
+
+newmtl material1483
+Kd 1 0 0.775033
+
+newmtl material1484
+Kd 1 0 0.77151
+
+newmtl material1485
+Kd 1 0 0.767987
+
+newmtl material1486
+Kd 1 0 0.764463
+
+newmtl material1487
+Kd 1 0 0.76094
+
+newmtl material1488
+Kd 1 0 0.757417
+
+newmtl material1489
+Kd 1 0 0.753893
+
+newmtl material1490
+Kd 1 0 0.750371
+
+newmtl material1491
+Kd 1 0 0.746847
+
+newmtl material1492
+Kd 1 0 0.743324
+
+newmtl material1493
+Kd 1 0 0.7398
+
+newmtl material1494
+Kd 1 0 0.736277
+
+newmtl material1495
+Kd 1 0 0.732754
+
+newmtl material1496
+Kd 1 0 0.729231
+
+newmtl material1497
+Kd 1 0 0.725708
+
+newmtl material1498
+Kd 1 0 0.722184
+
+newmtl material1499
+Kd 1 0 0.718661
+
+newmtl material1500
+Kd 1 0 0.715138
+
+newmtl material1501
+Kd 1 0 0.711615
+
+newmtl material1502
+Kd 1 0 0.708091
+
+newmtl material1503
+Kd 1 0 0.704568
+
+newmtl material1504
+Kd 1 0 0.701045
+
+newmtl material1505
+Kd 1 0 0.697522
+
+newmtl material1506
+Kd 1 0 0.693998
+
+newmtl material1507
+Kd 1 0 0.690475
+
+newmtl material1508
+Kd 1 0 0.686952
+
+newmtl material1509
+Kd 1 0 0.683428
+
+newmtl material1510
+Kd 1 0 0.679905
+
+newmtl material1511
+Kd 1 0 0.676382
+
+newmtl material1512
+Kd 1 0 0.672859
+
+newmtl material1513
+Kd 1 0 0.669335
+
+newmtl material1514
+Kd 1 0 0.665812
+
+newmtl material1515
+Kd 1 0 0.662289
+
+newmtl material1516
+Kd 1 0 0.658766
+
+newmtl material1517
+Kd 1 0 0.655242
+
+newmtl material1518
+Kd 1 0 0.651719
+
+newmtl material1519
+Kd 1 0 0.648196
+
+newmtl material1520
+Kd 1 0 0.644673
+
+newmtl material1521
+Kd 1 0 0.64115
+
+newmtl material1522
+Kd 1 0 0.637626
+
+newmtl material1523
+Kd 1 0 0.634103
+
+newmtl material1524
+Kd 1 0 0.630579
+
+newmtl material1525
+Kd 1 0 0.627057
+
+newmtl material1526
+Kd 1 0 0.623533
+
+newmtl material1527
+Kd 1 0 0.62001
+
+newmtl material1528
+Kd 1 0 0.616487
+
+newmtl material1529
+Kd 1 0 0.612963
+
+newmtl material1530
+Kd 1 0 0.60944
+
+newmtl material1531
+Kd 1 0 0.605917
+
+newmtl material1532
+Kd 1 0 0.602394
+
+newmtl material1533
+Kd 1 0 0.59887
+
+newmtl material1534
+Kd 1 0 0.595347
+
+newmtl material1535
+Kd 1 0 0.591824
+
+newmtl material1536
+Kd 1 0 0.588301
+
+newmtl material1537
+Kd 1 0 0.584777
+
+newmtl material1538
+Kd 1 0 0.581254
+
+newmtl material1539
+Kd 1 0 0.577731
+
+newmtl material1540
+Kd 1 0 0.574208
+
+newmtl material1541
+Kd 1 0 0.570684
+
+newmtl material1542
+Kd 1 0 0.567161
+
+newmtl material1543
+Kd 1 0 0.563638
+
+newmtl material1544
+Kd 1 0 0.560114
+
+newmtl material1545
+Kd 1 0 0.556592
+
+newmtl material1546
+Kd 1 0 0.553068
+
+newmtl material1547
+Kd 1 0 0.549545
+
+newmtl material1548
+Kd 1 0 0.546021
+
+newmtl material1549
+Kd 1 0 0.542498
+
+newmtl material1550
+Kd 1 0 0.538975
+
+newmtl material1551
+Kd 1 0 0.535452
+
+newmtl material1552
+Kd 1 0 0.531929
+
+newmtl material1553
+Kd 1 0 0.528405
+
+newmtl material1554
+Kd 1 0 0.524882
+
+newmtl material1555
+Kd 1 0 0.521359
+
+newmtl material1556
+Kd 1 0 0.517836
+
+newmtl material1557
+Kd 1 0 0.514312
+
+newmtl material1558
+Kd 1 0 0.510789
+
+newmtl material1559
+Kd 1 0 0.507266
+
+newmtl material1560
+Kd 1 0 0.503743
+
+newmtl material1561
+Kd 1 0 0.500219
+
+newmtl material1562
+Kd 1 0 0.496696
+
+newmtl material1563
+Kd 1 0 0.493173
+
+newmtl material1564
+Kd 1 0 0.489649
+
+newmtl material1565
+Kd 1 0 0.486126
+
+newmtl material1566
+Kd 1 0 0.482603
+
+newmtl material1567
+Kd 1 0 0.47908
+
+newmtl material1568
+Kd 1 0 0.475556
+
+newmtl material1569
+Kd 1 0 0.472033
+
+newmtl material1570
+Kd 1 0 0.46851
+
+newmtl material1571
+Kd 1 0 0.464987
+
+newmtl material1572
+Kd 1 0 0.461463
+
+newmtl material1573
+Kd 1 0 0.45794
+
+newmtl material1574
+Kd 1 0 0.454417
+
+newmtl material1575
+Kd 1 0 0.450894
+
+newmtl material1576
+Kd 1 0 0.447371
+
+newmtl material1577
+Kd 1 0 0.443847
+
+newmtl material1578
+Kd 1 0 0.440324
+
+newmtl material1579
+Kd 1 0 0.4368
+
+newmtl material1580
+Kd 1 0 0.433278
+
+newmtl material1581
+Kd 1 0 0.429754
+
+newmtl material1582
+Kd 1 0 0.426231
+
+newmtl material1583
+Kd 1 0 0.422708
+
+newmtl material1584
+Kd 1 0 0.419184
+
+newmtl material1585
+Kd 1 0 0.415661
+
+newmtl material1586
+Kd 1 0 0.412138
+
+newmtl material1587
+Kd 1 0 0.408615
+
+newmtl material1588
+Kd 1 0 0.405091
+
+newmtl material1589
+Kd 1 0 0.401568
+
+newmtl material1590
+Kd 1 0 0.398045
+
+newmtl material1591
+Kd 1 0 0.394522
+
+newmtl material1592
+Kd 1 0 0.390998
+
+newmtl material1593
+Kd 1 0 0.387475
+
+newmtl material1594
+Kd 1 0 0.383952
+
+newmtl material1595
+Kd 1 0 0.380429
+
+newmtl material1596
+Kd 1 0 0.376905
+
+newmtl material1597
+Kd 1 0 0.373382
+
+newmtl material1598
+Kd 1 0 0.369859
+
+newmtl material1599
+Kd 1 0 0.366335
+
+newmtl material1600
+Kd 1 0 0.362813
+
+newmtl material1601
+Kd 1 0 0.359289
+
+newmtl material1602
+Kd 1 0 0.355766
+
+newmtl material1603
+Kd 1 0 0.352242
+
+newmtl material1604
+Kd 1 0 0.348719
+
+newmtl material1605
+Kd 1 0 0.345196
+
+newmtl material1606
+Kd 1 0 0.341673
+
+newmtl material1607
+Kd 1 0 0.33815
+
+newmtl material1608
+Kd 1 0 0.334626
+
+newmtl material1609
+Kd 1 0 0.331103
+
+newmtl material1610
+Kd 1 0 0.32758
+
+newmtl material1611
+Kd 1 0 0.324057
+
+newmtl material1612
+Kd 1 0 0.320533
+
+newmtl material1613
+Kd 1 0 0.31701
+
+newmtl material1614
+Kd 1 0 0.313487
+
+newmtl material1615
+Kd 1 0 0.309964
+
+newmtl material1616
+Kd 1 0 0.30644
+
+newmtl material1617
+Kd 1 0 0.302917
+
+newmtl material1618
+Kd 1 0 0.299394
+
+newmtl material1619
+Kd 1 0 0.29587
+
+newmtl material1620
+Kd 1 0 0.292347
+
+newmtl material1621
+Kd 1 0 0.288824
+
+newmtl material1622
+Kd 1 0 0.285301
+
+newmtl material1623
+Kd 1 0 0.281777
+
+newmtl material1624
+Kd 1 0 0.278254
+
+newmtl material1625
+Kd 1 0 0.274731
+
+newmtl material1626
+Kd 1 0 0.271208
+
+newmtl material1627
+Kd 1 0 0.267684
+
+newmtl material1628
+Kd 1 0 0.264161
+
+newmtl material1629
+Kd 1 0 0.260638
+
+newmtl material1630
+Kd 1 0 0.257115
+
+newmtl material1631
+Kd 1 0 0.253592
+
+newmtl material1632
+Kd 1 0 0.250068
+
+newmtl material1633
+Kd 1 0 0.246545
+
+newmtl material1634
+Kd 1 0 0.243021
+
+newmtl material1635
+Kd 1 0 0.239499
+
+newmtl material1636
+Kd 1 0 0.235975
+
+newmtl material1637
+Kd 1 0 0.232452
+
+newmtl material1638
+Kd 1 0 0.228929
+
+newmtl material1639
+Kd 1 0 0.225405
+
+newmtl material1640
+Kd 1 0 0.221882
+
+newmtl material1641
+Kd 1 0 0.218359
+
+newmtl material1642
+Kd 1 0 0.214836
+
+newmtl material1643
+Kd 1 0 0.211312
+
+newmtl material1644
+Kd 1 0 0.207789
+
+newmtl material1645
+Kd 1 0 0.204266
+
+newmtl material1646
+Kd 1 0 0.200743
+
+newmtl material1647
+Kd 1 0 0.197219
+
+newmtl material1648
+Kd 1 0 0.193696
+
+newmtl material1649
+Kd 1 0 0.190173
+
+newmtl material1650
+Kd 1 0 0.18665
+
+newmtl material1651
+Kd 1 0 0.183126
+
+newmtl material1652
+Kd 1 0 0.179603
+
+newmtl material1653
+Kd 1 0 0.17608
+
+newmtl material1654
+Kd 1 0 0.172556
+
+newmtl material1655
+Kd 1 0 0.169034
+
+newmtl material1656
+Kd 1 0 0.16551
+
+newmtl material1657
+Kd 1 0 0.161987
+
+newmtl material1658
+Kd 1 0 0.158463
+
+newmtl material1659
+Kd 1 0 0.15494
+
+newmtl material1660
+Kd 1 0 0.151417
+
+newmtl material1661
+Kd 1 0 0.147894
+
+newmtl material1662
+Kd 1 0 0.144371
+
+newmtl material1663
+Kd 1 0 0.140847
+
+newmtl material1664
+Kd 1 0 0.137324
+
+newmtl material1665
+Kd 1 0 0.133801
+
+newmtl material1666
+Kd 1 0 0.130278
+
+newmtl material1667
+Kd 1 0 0.126754
+
+newmtl material1668
+Kd 1 0 0.123231
+
+newmtl material1669
+Kd 1 0 0.119708
+
+newmtl material1670
+Kd 1 0 0.116185
+
+newmtl material1671
+Kd 1 0 0.112661
+
+newmtl material1672
+Kd 1 0 0.109138
+
+newmtl material1673
+Kd 1 0 0.105615
+
+newmtl material1674
+Kd 1 0 0.102091
+
+newmtl material1675
+Kd 1 0 0.0985684
+
+newmtl material1676
+Kd 1 0 0.0950451
+
+newmtl material1677
+Kd 1 0 0.0915217
+
+newmtl material1678
+Kd 1 0 0.0879984
+
+newmtl material1679
+Kd 1 0 0.084475
+
+newmtl material1680
+Kd 1 0 0.0809522
+
+newmtl material1681
+Kd 1 0 0.0774288
+
+newmtl material1682
+Kd 1 0 0.0739055
+
+newmtl material1683
+Kd 1 0 0.0703821
+
+newmtl material1684
+Kd 1 0 0.0668588
+
+newmtl material1685
+Kd 1 0 0.0633359
+
+newmtl material1686
+Kd 1 0 0.0598125
+
+newmtl material1687
+Kd 1 0 0.0562892
+
+newmtl material1688
+Kd 1 0 0.0527658
+
+newmtl material1689
+Kd 1 0 0.0492425
+
+newmtl material1690
+Kd 1 0 0.0457196
+
+newmtl material1691
+Kd 1 0 0.0421963
+
+newmtl material1692
+Kd 1 0 0.0386729
+
+newmtl material1693
+Kd 1 0 0.0351496
+
+newmtl material1694
+Kd 1 0 0.0316262
+
+newmtl material1695
+Kd 1 0 0.0281034
+
+newmtl material1696
+Kd 1 0 0.02458
+
+newmtl material1697
+Kd 1 0 0.0210567
+
+newmtl material1698
+Kd 1 0 0.0175333
+
+newmtl material1699
+Kd 1 0 0.01401
+
+newmtl material1700
+Kd 1 0 0.0104871
+
+newmtl material1701
+Kd 1 0 0.00696373
+
+newmtl material1702
+Kd 1 0 0.00344038
+
