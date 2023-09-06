@@ -1301,7 +1301,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         initialTriangleCount += cluster.triangles.size();
     }
 
-    while (iteration < 50) {
+    while (iteration < 20) {
         std::cout << "Starting iteration " << iteration << " with " << clusters.size() << " clusters." << std::endl;
 
         int mergesInThisIteration = 0;
@@ -1353,7 +1353,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
 
                 if (similarity >= tau_N) {
                     for (const auto& triangleA : clusters[i].triangles) {
-                        if (alreadyProcessed.count(triangleA) > 0) continue;  // Skip if already processed
+                        // if (alreadyProcessed.count(triangleA) > 0) continue;  // Skip if already processed
 
                         bool foundAdjacent = false;
                         for (const auto& triangleB : potentialNeighborsCache[triangleA]) {
@@ -1361,25 +1361,25 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                                 // Both triangles meet the merge condition, so add them to the list
                                 toBeMerged.insert(triangleA);
                                 toBeMerged.insert(triangleB);  // Insert triangleB as well
-                                alreadyProcessed.insert(triangleA);  // Mark as processed
-                                alreadyProcessed.insert(triangleB);  // Mark as processed
+                                // alreadyProcessed.insert(triangleA);  // Mark as processed
+                                // alreadyProcessed.insert(triangleB);  // Mark as processed
                                 foundAdjacent = true;
                                 break;
                             }
                         }
                         if (!foundAdjacent) {
                             toBeSplit.insert(triangleA);
-                            alreadyProcessed.insert(triangleA);  // Mark as processed
+                            // alreadyProcessed.insert(triangleA);  // Mark as processed
                         }
                     }
 
                     for (const auto& triangleB : clusters[j].triangles) {
-                        if (alreadyProcessed.count(triangleB) > 0) continue;  // Skip if already processed
-                        if (toBeMerged.count(triangleB) == 0) {
-                            // Only add to be split if it's not in the merge list
-                            toBeSplit.insert(triangleB);
-                            alreadyProcessed.insert(triangleB);  // Mark as processed
-                        }
+                        // if (alreadyProcessed.count(triangleB) > 0) continue;  // Skip if already processed
+                            if (toBeMerged.count(triangleB) == 0) {
+                                // Only add to be split if it's not in the merge list
+                                toBeSplit.insert(triangleB);
+                                // alreadyProcessed.insert(triangleB);  // Mark as processed
+                            }
                     }
 
                     #pragma omp critical  // Critical section
@@ -1479,11 +1479,9 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             // Pre-compute potential neighbors for each triangle in trianglesToSplit
             std::unordered_map<Triangle, std::vector<Triangle>> potentialNeighborsCache;
 
-            // Create a map to hold triangles for each cluster
-            std::unordered_map<size_t, std::vector<Triangle>> privateTempClusters;
-
-            // Create a set to hold triangles that are moved
-            std::unordered_set<Triangle> movedTriangles;
+            // Declare thread-local containers
+            std::vector<std::unordered_map<size_t, std::vector<Triangle>>> threadLocalPrivateTempClusters(omp_get_max_threads());
+            std::vector<std::unordered_set<Triangle>> threadLocalMovedTriangles(omp_get_max_threads());
 
             // Precompute potential neighbors
             for (size_t i = 0; i < trianglesToSplit.size(); ++i) {
@@ -1499,13 +1497,10 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                     auto& potentialNeighbors = potentialNeighborsCache.at(triangle);
                     for (const auto& potentialNeighbor : potentialNeighbors) {
                         size_t neighborClusterIndex = findClusterIndexForTriangle(potentialNeighbor);
+                        int thread_id = omp_get_thread_num();
                         if (neighborClusterIndex != (size_t)-1) {
-                            #pragma omp critical
-                            {
-                                // Add the triangle to the appropriate cluster in the map
-                                privateTempClusters[neighborClusterIndex].push_back(triangle);
-                                movedTriangles.insert(triangle);
-                            }
+                            threadLocalPrivateTempClusters[thread_id][neighborClusterIndex].push_back(triangle);
+                            threadLocalMovedTriangles[thread_id].insert(triangle);
                             break;
                         }
                     }
@@ -1513,6 +1508,26 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                     // Key does not exist, handle this case
                     std::cerr << "Key not found: " << e.what() << std::endl;
                 }
+            }
+
+            // Merge thread-local containers into the main containers
+            std::unordered_map<size_t, std::vector<Triangle>> privateTempClusters;
+            std::unordered_set<Triangle> movedTriangles;
+
+            for (const auto& localMap : threadLocalPrivateTempClusters) {
+                for (const auto& entry : localMap) {
+                    size_t clusterIndex = entry.first;
+                    const auto& triangles = entry.second;
+                    privateTempClusters[clusterIndex].insert(
+                        privateTempClusters[clusterIndex].end(),
+                        triangles.begin(),
+                        triangles.end()
+                    );
+                }
+            }
+
+            for (const auto& localSet : threadLocalMovedTriangles) {
+                movedTriangles.insert(localSet.begin(), localSet.end());
             }
 
             // Remove moved triangles from their original clusters
@@ -1539,8 +1554,6 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             }
         }
 
-
-        
         clusters = tempClusters;
 
         validateTotalTriangles(tempClusters, initialTriangleCount);
@@ -1562,6 +1575,8 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
 
         clusters.erase(it, clusters.end());
         
+        mergeMap.clear();
+        splitMap.clear();
         spatialHash.clear();
         spatialHash.precomputeTriangleHashes(clusters);
 
