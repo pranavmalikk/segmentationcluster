@@ -1252,6 +1252,32 @@ void checkForDuplicateTriangles(const Cluster& cluster) {
     }
 }
 
+std::unordered_map<Triangle, size_t> triangleToClusterMap;  // Global or member variable
+
+// Initialize the map at the start of the algorithm
+void initializeTriangleToClusterMap(const std::vector<Cluster>& clusters) {
+    for (size_t i = 0; i < clusters.size(); ++i) {
+        for (const auto& triangle : clusters[i].triangles) {
+            triangleToClusterMap[triangle] = i;
+        }
+    }
+}
+
+// Fast lookup function
+size_t findClusterIndexForTriangle(const Triangle& targetTriangle) {
+    auto it = triangleToClusterMap.find(targetTriangle);
+    if (it != triangleToClusterMap.end()) {
+        return it->second;
+    }
+    return static_cast<size_t>(-1); // Not found
+}
+
+// Update the map whenever you move a triangle from one cluster to another
+void moveTriangleToCluster(const Triangle& triangle, size_t newClusterIndex) {
+    triangleToClusterMap[triangle] = newClusterIndex;
+}
+
+
 void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
     int iteration = 0;
     SpatialHash spatialHash(0.1);
@@ -1275,7 +1301,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         initialTriangleCount += cluster.triangles.size();
     }
 
-    while (iteration < 10) {
+    while (iteration < 50) {
         std::cout << "Starting iteration " << iteration << " with " << clusters.size() << " clusters." << std::endl;
 
         int mergesInThisIteration = 0;
@@ -1442,101 +1468,78 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         std :: cout << "cluster size before split: " << clusters.size() << std::endl;
 
         tempClusters = clusters;  // Start with the most current data
+        initializeTriangleToClusterMap(tempClusters);
 
-        // Loop through each entry in the splitMap
         for (auto& entry : splitMap) {
             auto& keyPair = entry.first;
             auto& trianglesToSplit = entry.second;
-            size_t sourceClusterIndex = keyPair.first;
-            size_t targetClusterIndex = keyPair.second;
 
-            // Insert initial count checks here
-            size_t initialSourceCount = tempClusters[sourceClusterIndex].triangles.size();
-            size_t initialTargetCount = tempClusters[targetClusterIndex].triangles.size();
-            size_t initialTotalCount = initialSourceCount + initialTargetCount;
+            // Initialize counts and timing here...
 
+            // Pre-compute potential neighbors for each triangle in trianglesToSplit
+            std::unordered_map<Triangle, std::vector<Triangle>> potentialNeighborsCache;
 
-            auto splitStart = std::chrono::high_resolution_clock::now();  // Start timing
+            // Create a map to hold triangles for each cluster
+            std::unordered_map<size_t, std::vector<Triangle>> privateTempClusters;
 
-            std::vector<std::unordered_set<Triangle>> privateSplitTriangles(omp_get_max_threads());
-            std::vector<std::vector<Triangle>> privateSourceTriangles(omp_get_max_threads());
-            std::vector<std::vector<Triangle>> privateTargetTriangles(omp_get_max_threads());
+            // Create a set to hold triangles that are moved
+            std::unordered_set<Triangle> movedTriangles;
 
-            // Parallel loop for splitting
+            // Precompute potential neighbors
+            for (size_t i = 0; i < trianglesToSplit.size(); ++i) {
+                const auto& triangle = trianglesToSplit[i];
+                potentialNeighborsCache[triangle] = spatialHash.getPotentialNeighbors(triangle);
+            }
+
+            // Parallel loop for splitting based on potential neighbors
             #pragma omp parallel for
             for (size_t i = 0; i < trianglesToSplit.size(); ++i) {
                 const auto& triangle = trianglesToSplit[i];
-                int thread_id = omp_get_thread_num();
-                
-                // Skip if already split
-                if (privateSplitTriangles[thread_id].find(triangle) != privateSplitTriangles[thread_id].end()) {
-                    continue;
+                try {
+                    auto& potentialNeighbors = potentialNeighborsCache.at(triangle);
+                    for (const auto& potentialNeighbor : potentialNeighbors) {
+                        size_t neighborClusterIndex = findClusterIndexForTriangle(potentialNeighbor);
+                        if (neighborClusterIndex != (size_t)-1) {
+                            #pragma omp critical
+                            {
+                                // Add the triangle to the appropriate cluster in the map
+                                privateTempClusters[neighborClusterIndex].push_back(triangle);
+                                movedTriangles.insert(triangle);
+                            }
+                            break;
+                        }
+                    }
+                } catch (const std::out_of_range& e) {
+                    // Key does not exist, handle this case
+                    std::cerr << "Key not found: " << e.what() << std::endl;
                 }
-
-                auto& sourceTriangles = tempClusters[sourceClusterIndex].triangles;
-                auto& targetTriangles = tempClusters[targetClusterIndex].triangles;
-                
-                if (std::find(sourceTriangles.begin(), sourceTriangles.end(), triangle) != sourceTriangles.end()) {
-                    privateSourceTriangles[thread_id].push_back(triangle);
-                } else if (std::find(targetTriangles.begin(), targetTriangles.end(), triangle) != targetTriangles.end()) {
-                    privateTargetTriangles[thread_id].push_back(triangle);
-                }
-
-                privateSplitTriangles[thread_id].insert(triangle);
-            }
-            Cluster newClusterSource, newClusterTarget;
-            // Merging thread-private data back to main structures
-            std::vector<Triangle> mergedSourceTriangles, mergedTargetTriangles;
-            for (int i = 0; i < omp_get_max_threads(); ++i) {
-                mergedSourceTriangles.insert(mergedSourceTriangles.end(), privateSourceTriangles[i].begin(), privateSourceTriangles[i].end());
-                mergedTargetTriangles.insert(mergedTargetTriangles.end(), privateTargetTriangles[i].begin(), privateTargetTriangles[i].end());
             }
 
-            // Now you can safely remove these triangles from the main clusters
-            // This part is not parallelized as it involves erasing elements
-            for (const auto& triangle : mergedSourceTriangles) {
-                auto itSource = std::remove(tempClusters[sourceClusterIndex].triangles.begin(), tempClusters[sourceClusterIndex].triangles.end(), triangle);
-                tempClusters[sourceClusterIndex].triangles.erase(itSource, tempClusters[sourceClusterIndex].triangles.end());
+            // Remove moved triangles from their original clusters
+            for (auto& cluster : tempClusters) {
+                auto& clusterTriangles = cluster.triangles;
+                clusterTriangles.erase(
+                    std::remove_if(
+                        clusterTriangles.begin(), clusterTriangles.end(),
+                        [&movedTriangles](const Triangle& t) { return movedTriangles.count(t) > 0; }
+                    ),
+                    clusterTriangles.end()
+                );
             }
 
-            for (const auto& triangle : mergedTargetTriangles) {
-                auto itTarget = std::remove(tempClusters[targetClusterIndex].triangles.begin(), tempClusters[targetClusterIndex].triangles.end(), triangle);
-                tempClusters[targetClusterIndex].triangles.erase(itTarget, tempClusters[targetClusterIndex].triangles.end());
-            }
-
-            auto splitEnd = std::chrono::high_resolution_clock::now();  // Stop timing
-            auto splitDuration = std::chrono::duration_cast<std::chrono::microseconds>(splitEnd - splitStart);
-            totalTime += splitDuration;
-
-            // Populate the new clusters with the merged triangles
-            newClusterSource.triangles = mergedSourceTriangles;
-            newClusterTarget.triangles = mergedTargetTriangles;
-
-            // Now you can safely remove these triangles from the main clusters
-            // This part is not parallelized as it involves erasing elements
-            for (const auto& triangle : mergedSourceTriangles) {
-                auto itSource = std::remove(tempClusters[sourceClusterIndex].triangles.begin(), tempClusters[sourceClusterIndex].triangles.end(), triangle);
-                tempClusters[sourceClusterIndex].triangles.erase(itSource, tempClusters[sourceClusterIndex].triangles.end());
-            }
-
-            for (const auto& triangle : mergedTargetTriangles) {
-                auto itTarget = std::remove(tempClusters[targetClusterIndex].triangles.begin(), tempClusters[targetClusterIndex].triangles.end(), triangle);
-                tempClusters[targetClusterIndex].triangles.erase(itTarget, tempClusters[targetClusterIndex].triangles.end());
-            }
-
-            // Insert final count checks and validation here
-            size_t finalSourceCount = tempClusters[sourceClusterIndex].triangles.size();
-            size_t finalTargetCount = tempClusters[targetClusterIndex].triangles.size();
-            size_t finalTotalCount = finalSourceCount + finalTargetCount;
-
-            // Add the new clusters
-            if (!newClusterSource.triangles.empty()) {
-                tempClusters.push_back(newClusterSource);
-            }
-            if (!newClusterTarget.triangles.empty()) {
-                tempClusters.push_back(newClusterTarget);
+            // Merge changes back to the main clusters
+            for (auto& entry : privateTempClusters) {
+                size_t clusterIndex = entry.first;
+                auto& triangles = entry.second;
+                tempClusters[clusterIndex].triangles.insert(
+                    tempClusters[clusterIndex].triangles.end(),
+                    triangles.begin(),
+                    triangles.end()
+                );
             }
         }
+
+
         
         clusters = tempClusters;
 
