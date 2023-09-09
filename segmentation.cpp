@@ -15,6 +15,9 @@
 #include <new>
 #include <memory>
 #include <omp.h>
+#include <deque>
+#include <algorithm> // for std::all_of
+#include <cstdlib> // for std::exit
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 // #include "/tinyobj_loader_opt.h"
@@ -594,34 +597,56 @@ public:
     }
 
 
-    std::vector<Triangle> getPotentialNeighbors(const Triangle& t) {
-        std::vector<Triangle> neighbors;
+    // std::vector<Triangle> getPotentialNeighbors(const Triangle& t) {
+    //     std::vector<Triangle> neighbors;
             
-        // Check if triangle's hashes are precomputed.
-        if (precomputedHashes.find(t) == precomputedHashes.end()) {
+    //     // Check if triangle's hashes are precomputed.
+    //     if (precomputedHashes.find(t) == precomputedHashes.end()) {
+    //         std::cout << "Error: Triangle hashes not precomputed for: " << t.toString() << std::endl;
+    //         return neighbors;
+    //     }
+
+    //     // Retrieve precomputed hash values for the triangle.
+    //     auto hashes = precomputedHashes[t];
+
+    //     for (const auto& h : hashes) {
+
+    //         for (const auto& indexedTriangle : hashTable[h]) {
+    //             const Triangle& potentialNeighbor = indexedTriangle.triangle;
+
+
+    //             if (potentialNeighbor != t) {  // Exclude the triangle itself
+    //                 neighbors.push_back(potentialNeighbor);
+    //             }
+    //         }
+    //     }
+    //     std::sort(neighbors.begin(), neighbors.end());
+    //     neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), neighbors.end());
+
+    //     return neighbors;
+    // }
+
+    std::vector<Triangle> getPotentialNeighbors(const Triangle& t) {
+        std::unordered_set<Triangle> neighbors;
+        auto it = precomputedHashes.find(t);
+        
+        if (it == precomputedHashes.end()) {
             std::cout << "Error: Triangle hashes not precomputed for: " << t.toString() << std::endl;
-            return neighbors;
+            return {};
         }
 
-        // Retrieve precomputed hash values for the triangle.
-        auto hashes = precomputedHashes[t];
-
+        const auto& hashes = it->second;
         for (const auto& h : hashes) {
-
             for (const auto& indexedTriangle : hashTable[h]) {
                 const Triangle& potentialNeighbor = indexedTriangle.triangle;
-
-
                 if (potentialNeighbor != t) {  // Exclude the triangle itself
-                    neighbors.push_back(potentialNeighbor);
+                    neighbors.insert(potentialNeighbor);
                 }
             }
         }
-        std::sort(neighbors.begin(), neighbors.end());
-        neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), neighbors.end());
-
-        return neighbors;
+        return std::vector<Triangle>(neighbors.begin(), neighbors.end());
     }
+
 
     std::unordered_set<int> getNeighboringClustersForCluster(const Cluster& cluster) {
         std::unordered_set<int> clusterIndices;
@@ -663,6 +688,7 @@ public:
     }
 };
 
+
 double ATaTb(const Cluster& Ta, const Cluster& Tb, 
              const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
              const TriangleAdjacency& triangleAdjacency,
@@ -683,6 +709,7 @@ double ATaTb(const Cluster& Ta, const Cluster& Tb,
     double result = static_cast<double>(count) / std::min(Ta.triangles.size(), Tb.triangles.size());
     return result;
 }
+
 
 
 
@@ -864,11 +891,6 @@ void saveToOBJ(const std::vector<Cluster>& clusters, const std::string& filename
 // };
 
 
-// double computeWeight(const Component& comp) {
-//     int numTriangles = comp.triangles.size();
-//     return 1.0 / (numTriangles * numTriangles);
-// }
-
 double Stitj(const Triangle& ti, const Triangle& tj, const std::vector<double>& weights) {
     double wA = weights[0], wL = weights[1], wS = weights[2], wN = weights[3];
     
@@ -888,45 +910,45 @@ double Stitj(const Triangle& ti, const Triangle& tj, const std::vector<double>& 
 
 //MAIN THING COMES DOWN TO THIS DISJOINT SIMILAR TRIANGLES FUNCTION
 
-std::vector<Triangle> findLargestDisjointSimilarTriangles(const std::vector<Triangle>& triangles) {
-    std::vector<Triangle> seeds;
+// std::vector<Triangle> findLargestDisjointSimilarTriangles(const std::vector<Triangle>& triangles) {
+//     std::vector<Triangle> seeds;
 
-    // Sort triangles by area
-    std::vector<Triangle> sortedTriangles = triangles;
-    std::sort(sortedTriangles.begin(), sortedTriangles.end(), [](const Triangle& a, const Triangle& b) {
-        return a.area > b.area;
-    });
+//     // Sort triangles by area
+//     std::vector<Triangle> sortedTriangles = triangles;
+//     std::sort(sortedTriangles.begin(), sortedTriangles.end(), [](const Triangle& a, const Triangle& b) {
+//         return a.area > b.area;
+//     });
 
-    // Set weights, with wN not equal to 0
-    std::vector<double> weights = {.25, .25, .25 };
-    double wN = 0.5;
-    weights.push_back(wN);
+//     // Set weights, with wN not equal to 0
+//     std::vector<double> weights = {.25, .25, .25 };
+//     double wN = 0.5;
+//     weights.push_back(wN);
 
-    for (const Triangle& triangle : sortedTriangles) {
-        bool isSimilar = false;
-        for (const Triangle& seed : seeds) {
-            if (Stitj(triangle, seed, weights) <= .01) { // Close to 0, meaning triangles are similar
-                isSimilar = true;
-                break;
-            }
-        }
-        if (!isSimilar) {
-            seeds.push_back(triangle);
-        }
-    }
+//     for (const Triangle& triangle : sortedTriangles) {
+//         bool isSimilar = false;
+//         for (const Triangle& seed : seeds) {
+//             if (Stitj(triangle, seed, weights) <= .01) { // Close to 0, meaning triangles are similar
+//                 isSimilar = true;
+//                 break;
+//             }
+//         }
+//         if (!isSimilar) {
+//             seeds.push_back(triangle);
+//         }
+//     }
 
-    // If D is empty, add the largest triangle as the only seed
-    if (seeds.empty()) {
-        seeds.push_back(sortedTriangles.front());
-    }
+//     // If D is empty, add the largest triangle as the only seed
+//     if (seeds.empty()) {
+//         seeds.push_back(sortedTriangles.front());
+//     }
 
-    // Find and print out the largest seed
-    auto largestSeedIter = std::max_element(seeds.begin(), seeds.end(), [](const Triangle& a, const Triangle& b) {
-        return a.area < b.area;
-    });
+//     // Find and print out the largest seed
+//     auto largestSeedIter = std::max_element(seeds.begin(), seeds.end(), [](const Triangle& a, const Triangle& b) {
+//         return a.area < b.area;
+//     });
 
-    return seeds;
-}
+//     return seeds;
+// }
 
 
 std::vector<Cluster> initialClusteringByShapeSimilarity(const std::vector<Triangle>& triangles, const std::vector<double>& weights, double tau_S) {
@@ -1254,15 +1276,6 @@ void checkForDuplicateTriangles(const Cluster& cluster) {
 
 std::unordered_map<Triangle, size_t> triangleToClusterMap;  // Global or member variable
 
-// Initialize the map at the start of the algorithm
-void initializeTriangleToClusterMap(const std::vector<Cluster>& clusters) {
-    for (size_t i = 0; i < clusters.size(); ++i) {
-        for (const auto& triangle : clusters[i].triangles) {
-            triangleToClusterMap[triangle] = i;
-        }
-    }
-}
-
 // Fast lookup function
 size_t findClusterIndexForTriangle(const Triangle& targetTriangle) {
     auto it = triangleToClusterMap.find(targetTriangle);
@@ -1277,10 +1290,62 @@ void moveTriangleToCluster(const Triangle& triangle, size_t newClusterIndex) {
     triangleToClusterMap[triangle] = newClusterIndex;
 }
 
+void checkForDuplicates(const std::vector<Cluster>& clusters) {
+    for (const auto& cluster : clusters) {
+        std::unordered_set<Triangle> uniqueTriangles(cluster.triangles.begin(), cluster.triangles.end());
+        if (uniqueTriangles.size() != cluster.triangles.size()) {
+            std::cerr << "Duplicate triangles found in a cluster" << std::endl;
+        }
+    }
+}
+
+void initializeOriginalClusterOfTriangle(std::unordered_map<Triangle, size_t>& originalClusterOfTriangle, const std::vector<Cluster>& clusters) {
+    originalClusterOfTriangle.clear();  // Clear the existing map
+    for (size_t i = 0; i < clusters.size(); ++i) {
+        for (const auto& triangle : clusters[i].triangles) {
+            originalClusterOfTriangle[triangle] = i;
+        }
+    }
+}
+
+bool checkConsistency(
+    const std::vector<Cluster>& clusters, 
+    size_t expectedTotalTriangles, 
+    const std::string& operation, 
+    size_t sourceClusterIndex, 
+    size_t targetClusterIndex,
+    size_t trianglesAdded,
+    size_t trianglesRemoved
+) {
+    size_t actualTotalTriangles = 0;
+    for (size_t i = 0; i < clusters.size(); ++i) {
+        const auto& cluster = clusters[i];
+        actualTotalTriangles += cluster.triangles.size();
+    }
+
+    if (actualTotalTriangles != expectedTotalTriangles) {
+        std::cerr << "[Operation: " << operation << "] Inconsistency: expected " << expectedTotalTriangles 
+                  << ", got " << actualTotalTriangles
+                  << ". Source Cluster: " << sourceClusterIndex
+                  << ". Target Cluster: " << targetClusterIndex
+                  << ". Triangles Added: " << trianglesAdded
+                  << ". Triangles Removed: " << trianglesRemoved
+                  << std::endl;
+        return false;  // Inconsistency found
+    }
+
+    return true;  // No inconsistency
+}
+
+// Define a threshold for the variance below which you consider the system to have converged
+double convergenceMetricThreshold = 0.1;  // Replace with your desired threshold value
 
 void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
     int iteration = 0;
     SpatialHash spatialHash(0.1);
+    std::deque<int> lastNMergedAndSplitSums;
+    int N = 3;  // Number of last iterations to consider
+    int changeRateThreshold = 20;  // The threshold for the difference in the sum of merged and split triangles
     auto start = std::chrono::high_resolution_clock::now();
     spatialHash.precomputeTriangleHashes(clusters);
     auto end = std::chrono::high_resolution_clock::now();
@@ -1288,20 +1353,20 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
 
     std::cout << "Time taken for precomputeTriangleHashes: " << elapsed.count() << " seconds" << std::endl;
 
-    // 1. Initialize the TriangleAdjacency object
-    TriangleAdjacency triangleAdjacency;
-    for (const auto& cluster : clusters) {
-        for (const auto& triangle : cluster.triangles) {
-            triangleAdjacency.addTriangle(triangle);
-        }
-    }
-
     size_t initialTriangleCount = 0;
     for (const auto& cluster : clusters) {
         initialTriangleCount += cluster.triangles.size();
     }
 
-    while (iteration < 20) {
+    while (true) {
+        // 1. Initialize the TriangleAdjacency object
+        TriangleAdjacency triangleAdjacency;
+        for (const auto& cluster : clusters) {
+            for (const auto& triangle : cluster.triangles) {
+                triangleAdjacency.addTriangle(triangle);
+            }
+        }
+
         std::cout << "Starting iteration " << iteration << " with " << clusters.size() << " clusters." << std::endl;
 
         int mergesInThisIteration = 0;
@@ -1316,10 +1381,6 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         std::unordered_map<size_t, std::pair<size_t, double>> mostSimilarCluster; // sourceCluster -> (targetCluster, similarity)
 
         for (size_t i = 0; i < clusters.size(); ++i) {
-            std::unordered_set<Triangle> uniqueTriangles(clusters[i].triangles.begin(), clusters[i].triangles.end());
-            if (uniqueTriangles.size() != clusters[i].triangles.size()) {
-                std::cout << "Duplicate triangles found in cluster " << i << std::endl;
-            }
 
             if (clusters[i].triangles.empty()) continue;
 
@@ -1336,14 +1397,12 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             std::unordered_set<Triangle> alreadyAddedToMaps;  // New line
 
 
-            #pragma omp parallel for  // Enable OpenMP parallelization
+            // #pragma omp parallel for  // Enable OpenMP parallelization
             for (size_t idx = 0; idx < neighboringClusterIndicesVec.size(); ++idx) {
                 int j = neighboringClusterIndicesVec[idx];
                 if (i == j || clusters[j].triangles.empty()) continue;
 
                 std::unordered_set<Triangle> localMergeList;
-                std::vector<Triangle> localSplitListI;
-                std::vector<Triangle> localSplitListJ;
                 std::unordered_set<Triangle> tbTriangles(clusters[j].triangles.begin(), clusters[j].triangles.end());
 
                 double similarity = ATaTb(clusters[i], clusters[j], potentialNeighborsCache, triangleAdjacency, tbTriangles);
@@ -1381,8 +1440,7 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                                 // alreadyProcessed.insert(triangleB);  // Mark as processed
                             }
                     }
-
-                    #pragma omp critical  // Critical section
+                    // #pragma omp critical  // Critical section
                     {
                         if (!toBeMerged.empty()) {
                             for (const auto& triangle : toBeMerged) {
@@ -1410,7 +1468,6 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
             totalLoopTime += std::chrono::duration_cast<std::chrono::milliseconds>(loopEndTime - loopStartTime);
         }
 
-
         std :: cout << "Time taken for the merge loop: " << totalLoopTime.count() << " milliseconds" << std::endl;
 
         size_t initialCount = 0;
@@ -1422,9 +1479,14 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
         // Initialize a variable to keep track of the total number of triangles after all merges
         int postMergeTotalTriangles = 0;
         std::unordered_set<Triangle> mergedTriangles;  // To keep track of merged triangles
+        std::unordered_set<size_t> mergedClusters;
+        std::unordered_map<Triangle, size_t> originalClusterOfTriangle;  // Triangle -> Original cluster index
+
+        initializeOriginalClusterOfTriangle(originalClusterOfTriangle, clusters);
 
         // Create a temporary copy of the clusters
         std::vector<Cluster> tempClusters = clusters;
+        clusters.clear();
 
         for (auto& entry : mergeMap) {
             auto& keyPair = entry.first;
@@ -1459,122 +1521,157 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                     mergedTriangles.insert(triangle);
                 }
             }
+            mergedClusters.insert(targetClusterIndex);
         }
 
         clusters = tempClusters;  // Update clusters with merged state
 
-        std::unordered_set<Triangle> splitTriangles;  // To keep track of triangles that have been split
-        std::chrono::microseconds totalTime(0);
-        std :: cout << "cluster size before split: " << clusters.size() << std::endl;
-
-        tempClusters = clusters;  // Start with the most current data
-        initializeTriangleToClusterMap(tempClusters);
-
-        for (auto& entry : splitMap) {
-            auto& keyPair = entry.first;
-            auto& trianglesToSplit = entry.second;
-
-            // Initialize counts and timing here...
-
-            // Pre-compute potential neighbors for each triangle in trianglesToSplit
-            std::unordered_map<Triangle, std::vector<Triangle>> potentialNeighborsCache;
-
-            // Declare thread-local containers
-            std::vector<std::unordered_map<size_t, std::vector<Triangle>>> threadLocalPrivateTempClusters(omp_get_max_threads());
-            std::vector<std::unordered_set<Triangle>> threadLocalMovedTriangles(omp_get_max_threads());
-
-            // Precompute potential neighbors
-            for (size_t i = 0; i < trianglesToSplit.size(); ++i) {
-                const auto& triangle = trianglesToSplit[i];
-                potentialNeighborsCache[triangle] = spatialHash.getPotentialNeighbors(triangle);
-            }
-
-            // Parallel loop for splitting based on potential neighbors
-            #pragma omp parallel for
-            for (size_t i = 0; i < trianglesToSplit.size(); ++i) {
-                const auto& triangle = trianglesToSplit[i];
-                try {
-                    auto& potentialNeighbors = potentialNeighborsCache.at(triangle);
-                    for (const auto& potentialNeighbor : potentialNeighbors) {
-                        size_t neighborClusterIndex = findClusterIndexForTriangle(potentialNeighbor);
-                        int thread_id = omp_get_thread_num();
-                        if (neighborClusterIndex != (size_t)-1) {
-                            threadLocalPrivateTempClusters[thread_id][neighborClusterIndex].push_back(triangle);
-                            threadLocalMovedTriangles[thread_id].insert(triangle);
-                            break;
-                        }
-                    }
-                } catch (const std::out_of_range& e) {
-                    // Key does not exist, handle this case
-                    std::cerr << "Key not found: " << e.what() << std::endl;
-                }
-            }
-
-            // Merge thread-local containers into the main containers
-            std::unordered_map<size_t, std::vector<Triangle>> privateTempClusters;
-            std::unordered_set<Triangle> movedTriangles;
-
-            for (const auto& localMap : threadLocalPrivateTempClusters) {
-                for (const auto& entry : localMap) {
-                    size_t clusterIndex = entry.first;
-                    const auto& triangles = entry.second;
-                    privateTempClusters[clusterIndex].insert(
-                        privateTempClusters[clusterIndex].end(),
-                        triangles.begin(),
-                        triangles.end()
-                    );
-                }
-            }
-
-            for (const auto& localSet : threadLocalMovedTriangles) {
-                movedTriangles.insert(localSet.begin(), localSet.end());
-            }
-
-            // Remove moved triangles from their original clusters
-            for (auto& cluster : tempClusters) {
-                auto& clusterTriangles = cluster.triangles;
-                clusterTriangles.erase(
-                    std::remove_if(
-                        clusterTriangles.begin(), clusterTriangles.end(),
-                        [&movedTriangles](const Triangle& t) { return movedTriangles.count(t) > 0; }
-                    ),
-                    clusterTriangles.end()
-                );
-            }
-
-            // Merge changes back to the main clusters
-            for (auto& entry : privateTempClusters) {
-                size_t clusterIndex = entry.first;
-                auto& triangles = entry.second;
-                tempClusters[clusterIndex].triangles.insert(
-                    tempClusters[clusterIndex].triangles.end(),
-                    triangles.begin(),
-                    triangles.end()
-                );
+        // After all merge operations are complete and clusters have been updated
+        for (size_t i = 0; i < clusters.size(); ++i) {
+            for (const auto& triangle : clusters[i].triangles) {
+                originalClusterOfTriangle[triangle] = i;
             }
         }
 
-        clusters = tempClusters;
+        std::unordered_set<Triangle> movedTriangles;  // To keep track of triangles that have already been moved
 
-        validateTotalTriangles(tempClusters, initialTriangleCount);
+        std::unordered_set<Triangle> splitTriangles;  // To keep track of triangles that have been split
+        // std::chrono::milliseconds totalLoopSplitTime(0);
+        // auto loopSplitStart = std::chrono::high_resolution_clock::now();  // Start time measurement
+        std :: cout << "cluster size before split: " << clusters.size() << std::endl;
 
-        std::cout << "Total time taken: " << totalTime.count() << " microseconds" << std::endl;
+        size_t initialTriangleCount = 0;
+        for (const auto& cluster : clusters) {
+            initialTriangleCount += cluster.triangles.size();
+        }
 
-        std::cout << "After " << iteration << " iterations, merged " << mergeMap.size() << " triangles and split " << splitMap.size() << " triangles." << std::endl;
-        // clusters.insert(clusters.end(), newClusters.begin(), newClusters.end());
-
-
-        //clusters before erase
-        std::cout << "Before erase: " << clusters.size() << std::endl;
+        validateTotalTriangles(clusters, initialTriangleCount);
 
         // Remove empty clusters after merges and splits
-        auto it = std::remove_if(clusters.begin(), clusters.end(),
+        auto mergeClear = std::remove_if(clusters.begin(), clusters.end(),
             [](const Cluster& cluster) { return cluster.triangles.empty(); });
             
-        std::cout << "Number of empty clusters: " << std::distance(it, clusters.end()) << std::endl;
+        std::cout << "Number of empty clusters: " << std::distance(mergeClear, clusters.end()) << std::endl;
 
-        clusters.erase(it, clusters.end());
-        
+        clusters.erase(mergeClear, clusters.end());
+
+        checkForDuplicates(clusters);
+        size_t trianglesAdded = 0;
+        size_t trianglesRemoved = 0;
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distr(0, clusters.size() - 1);
+        std::unordered_set<size_t> emptiedClusters;  // Keep track of emptied clusters
+        std::unordered_map<Triangle, size_t> triangleMovedToCluster;
+
+        for (auto& entry : splitMap) {
+            auto& trianglesToSplit = entry.second;
+            size_t originalClusterIndex = originalClusterOfTriangle[trianglesToSplit[0]];
+
+            if (emptiedClusters.count(originalClusterIndex) > 0) {
+                continue;
+            }
+
+            auto& originalClusterTriangles = clusters[originalClusterIndex].triangles;
+
+            size_t notMovedCount = 0;
+            std::vector<Triangle> successfullyMoved;
+
+            for (const auto& triangle : originalClusterTriangles) {
+                if (movedTriangles.count(triangle) == 0) {
+                    successfullyMoved.push_back(triangle);
+                    movedTriangles.insert(triangle);  // Mark as moved, but don't actually move yet
+                } else {
+                    notMovedCount++;
+                }
+            }
+
+            emptiedClusters.insert(originalClusterIndex);  // Mark this cluster as to be emptied, but don't actually clear it yet
+        }
+
+
+        // Remove empty clusters after merges and splits
+        auto itSplit = std::remove_if(clusters.begin(), clusters.end(),
+            [](const Cluster& cluster) { return cluster.triangles.empty(); });
+            
+        std::cout << "Number of empty clusters: " << std::distance(itSplit, clusters.end()) << std::endl;
+
+        clusters.erase(itSplit, clusters.end());
+
+
+        // Your function to check for duplicates (Assuming you have this implemented)
+        checkForDuplicates(clusters);
+
+
+
+        size_t finalTriangleCount = 0;
+        for (const auto& cluster : clusters) {
+            finalTriangleCount += cluster.triangles.size();
+        }
+
+        // Verify
+        if (initialTriangleCount != finalTriangleCount || trianglesAdded != trianglesRemoved) {
+            std::cerr << "ERROR: Triangle count mismatch. Initial: " << initialTriangleCount << ", Final: " << finalTriangleCount << std::endl;
+            std::cerr << "Triangles Added: " << trianglesAdded << ", Triangles Removed: " << trianglesRemoved << std::endl;
+        }
+
+        validateTotalTriangles(clusters, initialTriangleCount);
+
+        // std::cout << "Total time taken: " << totalLoopSplitTime.count() << " microseconds" << std::endl;
+
+        std::cout << "After " << iteration << " iterations, merged " << mergeMap.size() << " triangles and split " << splitMap.size() << " triangles." << std::endl;
+
+        // After you calculate the merged and split triangles for this iteration
+        int mergedAndSplitThisIteration = mergeMap.size() + splitMap.size();
+        std::cout << "Merged and split this iteration: " << mergedAndSplitThisIteration << std::endl;
+
+        // Update the deque
+        lastNMergedAndSplitSums.push_back(mergedAndSplitThisIteration);
+        if (lastNMergedAndSplitSums.size() > N) {
+            lastNMergedAndSplitSums.pop_front();
+        }
+
+        // Debug print the deque
+        std::cout << "last N merged and Split Sums: ";
+        for (const auto& val : lastNMergedAndSplitSums) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "last N merged and Split Sums size: " << lastNMergedAndSplitSums.size() << std::endl;
+
+        if (lastNMergedAndSplitSums.size() >= N) { // make sure there are at least N elements
+            int sumOfAbsDifferences = 0;
+            
+            // Loop starts from the Nth element from the end and goes to the last element
+            auto itEnd = std::prev(lastNMergedAndSplitSums.end());
+            for (auto it = std::prev(lastNMergedAndSplitSums.end(), N); it != itEnd; ++it) {
+                // Debug print the current and next elements
+                std::cout << "Current element: " << *it << ", Next element: " << *std::next(it) << std::endl;
+                
+                // Calculate the absolute difference between the current and next element
+                int absDifference = std::abs(*it - *std::next(it));
+                
+                // Debug print the calculated absolute difference
+                std::cout << "Calculated absolute difference: " << absDifference << std::endl;
+                
+                // Add the absolute difference to the sum
+                sumOfAbsDifferences += absDifference;
+            }
+            std :: cout << "sum of abs differences: " << sumOfAbsDifferences << std::endl;
+            // Now sumOfAbsDifferences contains the sum of the absolute differences of the last N elements
+            if (sumOfAbsDifferences <= changeRateThreshold) {
+                std::cout << "Convergence achieved based on change rate. Stopping..." << std::endl;
+                break;
+            }
+            else {
+                std::cout << "convergence not achieved based on change rate. Continuing..." << std::endl;
+            }
+        }
+
+
+                
         mergeMap.clear();
         splitMap.clear();
         spatialHash.clear();
@@ -1591,14 +1688,6 @@ void refineClusters(std::vector<Cluster>& clusters, double tau_N) {
                 triangleCount[triangle]++;
             }
         }
-
-        // for (const auto& [triangle, count] : triangleCount) {
-        //     if (count > 1) {
-        //         std::cout << "Triangle " << triangle.toString() << " appears " << count << " times." << std::endl;
-        //     }
-        // }
-
-
 
         // Consistency check
         size_t currentTriangleCount = 0;
@@ -1626,7 +1715,7 @@ std::vector<Cluster> createSearchSpaces(const std::vector<Triangle>& triangles, 
     
     // 3. Iterative merging and splitting based on adjacency similarity
     std::cout << "3. Iterative merging and splitting based on adjacency similarity" << std::endl;
-    double tau_N = 0.05;  // Threshold for adjacency similarity
+    double tau_N = 0.5;  // Threshold for adjacency similarity
     refineClusters(clusters, tau_N);
 
     // std::set<Triangle> usedTriangles; // This will store triangles that are part of a component
@@ -1730,9 +1819,8 @@ void testSpatialHash(const std::vector<Triangle>& triangles) {
 int main() {
     std::cout << "Starting program..." << std::endl;
     // std::vector<Triangle> allTriangles = {};  // Fill with triangles from your data source
-    std::vector<double> weights = {1.0, 1.0, 1.0, 1.0};
+    std::vector<double> weights = {1, .5, .5, 0};
     std::vector<Vector3D> allVertices;    
-    std::vector<std::vector<Vector3D>> quadPolygons; // Store polygons with 4 vertices
     double tau_S = 0.01;  // Threshold for shape similarity
     std::string inputfile = "/home/kingpin/Documents/blender/kb3d_americana-native.obj";
     std::string err;
