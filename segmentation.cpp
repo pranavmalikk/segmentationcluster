@@ -18,6 +18,8 @@
 #include <memory>
 #include <omp.h>
 #include <deque>
+#include <queue> // for std::priority_queue
+#include <utility> // for std::pair
 #include <algorithm> // for std::all_of
 #include <cstdlib> // for std::exit
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -29,8 +31,7 @@ typedef K::Point_3 Point_3;
 typedef CGAL::Polyhedron_3<K> Polyhedron;
 class Triangle;
 class TriangleAdjacency;
-class Component; // forward declare the Component class
-
+class Hull; 
 // Assuming a Vector3D structure is present somewhere, used for normals.
 class Vector3D {
 public:
@@ -594,6 +595,7 @@ bool shareVertex(const Triangle& a, const Triangle& b) {
 
 // Depth First Search function
 void DFS(int u, std::vector<std::vector<int>>& adjList, std::vector<bool>& visited) {
+    // std::cout << "[Debug] Visiting vertex: " << u << std::endl;
     visited[u] = true;
     for (int v : adjList[u]) {
         if (!visited[v]) {
@@ -602,12 +604,10 @@ void DFS(int u, std::vector<std::vector<int>>& adjList, std::vector<bool>& visit
     }
 }
 
-// Function to check if triangles form a connected component
 bool areTrianglesContiguous(const std::vector<Triangle>& triangles) {
     int n = triangles.size();
-    if (n == 0) return true;  // Empty set is considered contiguous
+    if (n == 0) return true;
 
-    // Create an adjacency list for the graph
     std::vector<std::vector<int>> adjList(n);
 
     for (int i = 0; i < n; ++i) {
@@ -619,32 +619,62 @@ bool areTrianglesContiguous(const std::vector<Triangle>& triangles) {
         }
     }
 
-    // Run DFS from the first triangle
-    std::vector<bool> visited(n, false);
-    DFS(0, adjList, visited);
+    // Print adjacency list
+    // std::cout << "[Debug] Adjacency list:" << std::endl;
+    // for (int i = 0; i < adjList.size(); ++i) {
+    //     std::cout << i << ": ";
+    //     for (int j : adjList[i]) {
+    //         std::cout << j << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 
-    // Check if all triangles were visited
-    return std::all_of(visited.begin(), visited.end(), [](bool v) { return v; });
+    std::vector<bool> visited(n, false);
+    int connectedComponents = 0;
+
+    for (int i = 0; i < n; ++i) {
+        if (!visited[i]) {
+            // std::cout << "[Debug] Running DFS starting from: " << i << std::endl;
+            DFS(i, adjList, visited);
+            connectedComponents++;
+        }
+    }
+
+    // std::cout << "[Debug] Number of connected components: " << connectedComponents << std::endl;
+
+    return connectedComponents == 1;
 }
+
+
 
 struct Component {
     std::vector<Triangle> triangles;
     double weight;
 
     bool isValid() const {
-        // Check if triangles are contiguous
-        // This requires a function that checks if a group of triangles form a connected set
-        if (!areTrianglesContiguous(triangles)) {  // To be implemented
-            return false;
-        }
-        // Check other properties (iii and iv) if needed
-        return true;
+        // std::cout << "[Debug] Checking validity for component with triangles:" << std::endl;
+        // for (const auto& triangle : triangles) {
+        //     std::cout << triangle.toString() << std::endl;  // Assumes Triangle has a good ostream operator
+        // }
+        bool contiguous = areTrianglesContiguous(triangles);
+        // std::cout << "[Debug] Is contiguous: " << std::boolalpha << contiguous << std::endl;
+        return contiguous;
     }
 
     void updateWeight() {
         double Zi = static_cast<double>(triangles.size());
         weight = 1.0 / (Zi * Zi);
     }
+
+    std::string toString() const {
+        std::ostringstream oss;
+        for (const auto& triangle : triangles) {
+            oss << triangle.toString() << ", ";
+        }
+        return oss.str();
+    }
+
+    bool overlapsSignificantly(const Component& other);
 
 };
 
@@ -659,6 +689,19 @@ public:
         for (const Triangle& triangle : component.triangles) {
             add(triangle);
         }
+        computeHull();
+    }
+
+    // Copy constructor
+    Hull(const Hull& other) {
+        points = other.points;
+        P = other.P;
+    }
+
+    Hull(const Hull& h1, const Hull& h2) {
+        points = h1.points;
+        points.insert(points.end(), h2.points.begin(), h2.points.end());
+        computeHull();
     }
 
 
@@ -669,20 +712,27 @@ public:
         points.push_back(Point_3(triangle.vec3.x, triangle.vec3.y, triangle.vec3.z));
     }
 
-    // Compute the convex hull and store it in Polyhedron P
     void computeHull() {
+        // Debugging: Print the number of points.
+        //ENABLE DEBUG
+        // std::cout << "Number of points before computing hull: " << points.size() << std::endl;
+        
         if (points.size() < 4) {
-            // Log or handle the error. A 3D convex hull needs at least 4 points.
+            //ENABLE DEBUG
+            // std::cout << "Insufficient points for 3D hull." << std::endl;
             return;
         }
-
         try {
             CGAL::convex_hull_3(points.begin(), points.end(), P);
         } catch (const std::exception& e) {
-            // Log the error message
             std::cerr << "Exception: " << e.what() << std::endl;
         }
+
+        // Debugging: Print the number of vertices in the computed hull.
+        //ENABLE DEBUG
+        // std::cout << "Number of vertices in the hull after computing: " << P.size_of_vertices() << std::endl;
     }
+
 
     double volume() const {
         if (P.is_empty()) {
@@ -711,12 +761,34 @@ public:
 
             total_volume += (Q_F - CGAL::ORIGIN) * N_F * areaF;
         }
-
+        //ENABLE DEBUG
+        // std::cout << "Computed volume: " << std::abs(total_volume) / 3.0 << std::endl;
         return std::abs(total_volume) / 3.0;
     }
 
 };
 
+bool Component::overlapsSignificantly(const Component& other) {
+        Hull thisHull = Hull(*this);
+        Hull otherHull = Hull(other);
+
+        double thisVolume = thisHull.volume();
+        double otherVolume = otherHull.volume();
+
+        Hull combinedHull(thisHull, otherHull);  // You will need to implement this constructor
+        double combinedVolume = combinedHull.volume();
+
+        // Compute the volume that is exclusive to each hull
+        double exclusiveThisVolume = combinedVolume - otherVolume;
+        double exclusiveOtherVolume = combinedVolume - thisVolume;
+
+        // Check for significant overlap
+        if (exclusiveThisVolume / thisVolume <= 0.1 || exclusiveOtherVolume / otherVolume <= 0.1) {
+            return true;
+        }
+        return false;
+
+    }
 
 double ATaTb(const Cluster& Ta, const Cluster& Tb, 
              const std::unordered_map<Triangle, std::vector<Triangle>>& potentialNeighborsCache, 
@@ -933,32 +1005,6 @@ std::vector<Cluster> initialClusteringByShapeSimilarity(const std::vector<Triang
     return clusters;
 }
 
-enum class SeedingResult {
-    PERFECT,
-    UNDER_SEEDED,
-    OVER_SEEDED
-};
-
-SeedingResult determineSeeding(const std::vector<Triangle>& seeds, const std::vector<Component>& components) {
-    size_t seedsFound = 0;
-    for (const auto& seed : seeds) {
-        for (const auto& component : components) {
-            if (std::find(component.triangles.begin(), component.triangles.end(), seed) != component.triangles.end()) {
-                seedsFound++;
-                break;
-            }
-        }
-    }
-
-    if (seedsFound == seeds.size()) {
-        return SeedingResult::PERFECT;
-    } else if (seedsFound < seeds.size()) {
-        return SeedingResult::UNDER_SEEDED;
-    } else {
-        return SeedingResult::OVER_SEEDED;
-    }
-}
-
 bool attemptToMergeComponents(Component& component1, Component& component2, TriangleAdjacency& adjacency) {
     // Create a temporary component with the triangles from both components
     Component tempComponent = component1;
@@ -972,37 +1018,105 @@ bool attemptToMergeComponents(Component& component1, Component& component2, Tria
     return false;
 }
 
-
-
-std::pair<Triangle, std::vector<double>> chooseNextTriangleByHull(
+std::vector<std::pair<Triangle, double>> chooseNextTriangleByHullForEachComponent(
     const std::vector<Component>& tempComponents, 
     const std::vector<Triangle>& remainingTriangles
 ) {
-    Triangle bestTriangle;
-    double bestScore = std::numeric_limits<double>::max();  // initialize with a high value
-    std::vector<double> bestVolumeChanges;
+    std::vector<std::pair<Triangle, double>> bestTrianglesForComponents;
+    std::unordered_set<Triangle> alreadyChosenTriangles;
 
-    for (const Triangle& triangle : remainingTriangles) {
-        std::vector<double> volumeChanges;
-        for (const Component& component : tempComponents) {
-            Hull originalHull(component);
+    // std::cout << "Number of tempComponents: " << tempComponents.size() << std::endl;
+    // std::cout << "Number of remainingTriangles: " << remainingTriangles.size() << std::endl;
+
+    int componentIndex = 0;
+
+    for (const Component& component : tempComponents) {
+        Triangle bestTriangle;
+        double bestScore = std::numeric_limits<double>::max();
+        Hull originalHull(component);
+        double originalVolume = originalHull.volume();
+
+        // std::cout << "Iterating for Component Index: " << componentIndex << std::endl;
+        // std::cout << "original component" << component.toString() << std::endl;
+
+        for (const Triangle& triangle : remainingTriangles) {
+            if (alreadyChosenTriangles.find(triangle) != alreadyChosenTriangles.end()) {
+                // std::cout << "Skipping triangle as it's already chosen: " << triangle.toString() << std::endl;
+                continue;
+            }
+
             Hull tempHull = originalHull;
             tempHull.add(triangle);
             tempHull.computeHull();
-            volumeChanges.push_back(std::abs(tempHull.volume() - originalHull.volume()));
+            double newVolume = tempHull.volume();
+            double volumeChange = std::abs(newVolume - originalVolume);
+
+            if (volumeChange < bestScore) {
+                bestScore = volumeChange;
+                bestTriangle = triangle;
+            }
         }
 
-        double minVolumeChange = *std::min_element(volumeChanges.begin(), volumeChanges.end());
+        // std::cout << "Component Index: " << componentIndex << ", Best triangle: " 
+        //           << bestTriangle.toString() << " with score " << bestScore << std::endl;
 
-        if (minVolumeChange < bestScore) {
-            bestScore = minVolumeChange;
-            bestTriangle = triangle;
-            bestVolumeChanges = volumeChanges;
-        }
+        bestTrianglesForComponents.push_back({bestTriangle, bestScore});
+        alreadyChosenTriangles.insert(bestTriangle);
+
+        ++componentIndex;
     }
 
-    return {bestTriangle, bestVolumeChanges};
+    return bestTrianglesForComponents;
 }
+
+
+std::vector<std::vector<std::pair<Triangle, double>>> getCandidateTrianglesForEachComponent(
+    const std::vector<Component>& tempComponents, 
+    const std::vector<Triangle>& remainingTriangles,
+    size_t topN = 3  // The number of top candidates to consider for each component
+) {
+    std::vector<std::vector<std::pair<Triangle, double>>> candidateTrianglesForComponents;
+    std::unordered_set<Triangle> alreadyChosenTriangles;
+
+    for (const Component& component : tempComponents) {
+        std::priority_queue<std::pair<double, Triangle>> candidatePriorityQueue;
+        Hull originalHull(component);
+        double originalVolume = originalHull.volume();
+
+        for (const Triangle& triangle : remainingTriangles) {
+            if (alreadyChosenTriangles.find(triangle) != alreadyChosenTriangles.end()) {
+                continue;
+            }
+
+            Hull tempHull = originalHull;
+            tempHull.add(triangle);
+            tempHull.computeHull();
+            double newVolume = tempHull.volume();
+            double volumeChange = std::abs(newVolume - originalVolume);
+
+            // We use negative volumeChange because priority_queue sorts in descending order
+            candidatePriorityQueue.push({-volumeChange, triangle});
+        }
+
+        std::vector<std::pair<Triangle, double>> topCandidates;
+
+        for (size_t i = 0; i < topN && !candidatePriorityQueue.empty(); ++i) {
+            auto scoreTrianglePair = candidatePriorityQueue.top();
+            candidatePriorityQueue.pop();
+
+            double score = -scoreTrianglePair.first;
+            Triangle triangle = scoreTrianglePair.second;
+
+            topCandidates.push_back({triangle, score});
+            alreadyChosenTriangles.insert(triangle);
+        }
+
+        candidateTrianglesForComponents.push_back(topCandidates);
+    }
+
+    return candidateTrianglesForComponents;
+}
+
 
 bool recursiveBacktracking(std::vector<Component>& tempComponents,
                            std::unordered_set<Triangle>& remainingTriangles,
@@ -1011,76 +1125,64 @@ bool recursiveBacktracking(std::vector<Component>& tempComponents,
                            const int MAX_DEPTH = 3) {
     std::cout << "Entering recursiveBacktracking at depth: " << depth << std::endl;
     std::cout << "Number of remaining triangles: " << remainingTriangles.size() << std::endl;
-    
+
     if (depth > MAX_DEPTH) {
         std::cout << "Max depth reached. Returning false." << std::endl;
-        return false;  // Maximum depth reached without a solution.
+        return false;
     }
 
     if (remainingTriangles.empty()) {
         std::cout << "No remaining triangles. Returning true." << std::endl;
-        return true;  // Found a solution.
+        return true;
     }
 
-    // Try to merge components before attempting to add triangles
-    for (int i = 0; i < tempComponents.size(); ++i) {
-        for (int j = i + 1; j < tempComponents.size(); ++j) {
-            if (attemptToMergeComponents(tempComponents[i], tempComponents[j], adjacency)) {
-                // Remove the merged component
-                tempComponents.erase(tempComponents.begin() + j);
-                --j;  // Adjust the index
-                
-                // Recur with the merged components
-                if (recursiveBacktracking(tempComponents, remainingTriangles, adjacency, depth + 1)) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    // Choose the next best triangle for all components
-    auto [nextTriangle, _] = chooseNextTriangleByHull(
+    auto candidateTrianglesForComponents = getCandidateTrianglesForEachComponent(
         tempComponents,
         std::vector<Triangle>(remainingTriangles.begin(), remainingTriangles.end())
     );
 
-    std::cout << "Trying next triangle: " << nextTriangle.toString() << std::endl;
-
-    for (auto& component : tempComponents) {
-        std::cout << "Current state of component: " << component.triangles.size() << " triangles" << std::endl;
-
+    for (size_t i = 0; i < tempComponents.size(); ++i) {
+        auto& component = tempComponents[i];
         Component prevState = component;
 
-        // Remove the triangle from remainingTriangles
-        if (remainingTriangles.erase(nextTriangle) == 0) {
-            continue; // The triangle was not in remainingTriangles, skip this component
-        }
+        // Retrieve candidate triangles for the current component
+        auto& candidateTrianglesForComponent = candidateTrianglesForComponents[i];
 
-        // Add the nextTriangle to the component
-        component.triangles.push_back(nextTriangle);
+        std::cout << "Trying candidate triangles for component index: " << i << std::endl;
 
-        // Validate the component
-        if (component.isValid()) {
-            std::cout << "Triangle added. Recurring..." << std::endl;
+        // Loop through the candidate triangles for the current component
+        for (const auto& scoreTrianglePair : candidateTrianglesForComponent) {
+            Triangle candidateTriangle = scoreTrianglePair.first;
 
-            // Recur with the remaining triangles
-            if (recursiveBacktracking(tempComponents, remainingTriangles, adjacency, depth + 1)) {
-                return true;
+            std::cout << "Trying to add triangle: " << candidateTriangle.toString() << std::endl;
+            
+            // Try adding each candidate triangle
+            if (remainingTriangles.erase(candidateTriangle) == 0) {
+                continue;
             }
-            std::cout << "Backtracking..." << std::endl;
+            component.triangles.push_back(candidateTriangle);
 
-        } else {
-            std::cout << "Failed to add triangle to component. Rolling back." << std::endl;
-            // Roll back if the component is not valid
+            if (component.isValid()) {
+                std::cout << "Component is valid. Recurring..." << std::endl;
+                
+                if (recursiveBacktracking(tempComponents, remainingTriangles, adjacency, depth + 1)) {
+                    return true;
+                } else {
+                    std::cout << "Backtracking due to unsuccessful recursion..." << std::endl;
+                }
+            } else {
+                std::cout << "Component is not valid. Rolling back..." << std::endl;
+            }
+
+            // If you reach here, it means you need to backtrack
             component = prevState;
-            remainingTriangles.insert(nextTriangle);
+            remainingTriangles.insert(candidateTriangle);
         }
     }
 
     std::cout << "All paths explored. Returning false." << std::endl;
     return false;
 }
-
 
 
 
@@ -1153,44 +1255,52 @@ bool growComponents(std::vector<Component>& tempComponents,
                     TriangleAdjacency& adjacency) {
     bool anyComponentGrew = false;
 
-    // Choose the next best triangle for all components
-    auto [nextTriangle, _] = chooseNextTriangleByHull(
-        tempComponents,
+    // std::cout << "[Debug] Starting growComponents. remainingTriangles size: " << remainingTriangles.size() << std::endl;
+
+    if(remainingTriangles.empty()) {
+        // std::cout << "[Debug] remainingTriangles is already empty at the start. Exiting.\n";
+        return anyComponentGrew; // You could return false or an appropriate value
+    }
+
+    auto bestTrianglesForComponents = chooseNextTriangleByHullForEachComponent(
+        tempComponents, 
         std::vector<Triangle>(remainingTriangles.begin(), remainingTriangles.end())
     );
 
-    for (auto& component : tempComponents) {
+    for (size_t i = 0; i < tempComponents.size(); ++i) {
+        Component& component = tempComponents[i];
+        Triangle nextTriangle = std::get<0>(bestTrianglesForComponents[i]);
+
+        if (remainingTriangles.erase(nextTriangle) == 0) {
+            // std::cout << "[Debug] Triangle not found in remainingTriangles, skipping" << std::endl;
+            continue;
+        }
+
+        // std::cout << "[Debug] Removed triangle, new remainingTriangles size: " << remainingTriangles.size() << std::endl;
+
+        // Keep a snapshot of the component before attempting to grow it
         Component prevState = component;
 
-        // Remove the triangle from remainingTriangles
-        if (remainingTriangles.erase(nextTriangle) == 0) {
-            continue; // The triangle was not in remainingTriangles, skip this component
-        }
-        
-        // Add the nextTriangle to the component
+        if (component.isValid()) {
+            // std::cout << "[Debug] Valid growth BEFORE PUSHING NEW TRIANGLE.\n";
+        } 
+
+        // Attempt to grow the component
         component.triangles.push_back(nextTriangle);
 
-        // Validate the component
         if (component.isValid()) {
+            // std::cout << "[Debug] Valid growth.\n";
             anyComponentGrew = true;
         } else {
-            // Roll back if the component is not valid
+            // std::cout << "[Debug] Invalid growth. Reverting...\n";
+            // If the growth was invalid, revert to the previous state
             component = prevState;
             remainingTriangles.insert(nextTriangle);
+            // std::cout << "[Debug] Reverted. New remainingTriangles size: " << remainingTriangles.size() << std::endl;
         }
     }
 
-    // Attempt to merge components, if necessary
-    for (int i = 0; i < tempComponents.size(); ++i) {
-        for (int j = i + 1; j < tempComponents.size(); ++j) {
-            if (attemptToMergeComponents(tempComponents[i], tempComponents[j], adjacency)) {
-                anyComponentGrew = true;
-                // Remove the merged component
-                tempComponents.erase(tempComponents.begin() + j);
-                --j;  // Adjust the index
-            }
-        }
-    }
+    // std::cout << "[Debug] Ending growComponents. remainingTriangles size: " << remainingTriangles.size() << std::endl;
 
     return anyComponentGrew;
 }
@@ -1237,7 +1347,7 @@ std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster,
     std::unordered_set<Triangle> remainingTriangles(cluster.triangles.begin(), cluster.triangles.end());
 
     while (!remainingTriangles.empty()) {
-        std::cout << "remaining triangles size: " << remainingTriangles.size() << std::endl;
+        // std::cout << "remaining triangles size: " << remainingTriangles.size() << std::endl;
         auto start = std::chrono::high_resolution_clock::now();  // Start timing
 
         std::vector<Component> currentIterationComponents;  // Components for this iteration
@@ -1258,15 +1368,32 @@ std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster,
         while (canGrow) {
             canGrow = growComponents(tempComponents, remainingTriangles, adjacency);
 
-            // Update weights and re-sort tempComponents
+            // After growing components and before the next iteration
+            // Perform the merging of significantly overlapping components
+            for (int i = 0; i < tempComponents.size(); ++i) {
+                for (int j = i + 1; j < tempComponents.size(); ++j) {
+                    if (tempComponents[i].overlapsSignificantly(tempComponents[j])) {
+                        // Attempt to merge the components (implement this based on your own criteria)
+                        // Also remove one of them from the tempComponents list if merge is successful
+                        if (attemptToMergeComponents(tempComponents[i], tempComponents[j], adjacency)) {
+                            tempComponents.erase(tempComponents.begin() + j);
+                            --j;
+                        }
+                    }
+                }
+            }
+
+            // Evaluate components based on the paper's criteria
             for (auto& component : tempComponents) {
                 component.updateWeight();  // Assuming you have a method that updates the weight
             }
+
+            // Sort based on weight
             std::sort(tempComponents.begin(), tempComponents.end(), [](const Component& a, const Component& b) {
                 return a.weight < b.weight;
             });
 
-            // Debug: Check if each component is contiguous after growth
+            // Check contiguity of each component
             for (const auto& component : tempComponents) {
                 if (!areTrianglesContiguous(component.triangles)) {
                     std::cout << "Component became non-contiguous during growth." << std::endl;
@@ -1274,9 +1401,10 @@ std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster,
             }
 
             if (!canGrow) {
+                // std::cout << "remaining triangles size before backtracing: " << remainingTriangles.size() << std::endl;
                 if (!recursiveBacktracking(tempComponents, remainingTriangles, adjacency)) {
                     // No more alternative paths to explore; break out of loop
-                    std::cout << "Backtracking failed. Breaking out." << std::endl;
+                    // std::cout << "Backtracking failed. Breaking out." << std::endl;
                     break;
                 }
             }

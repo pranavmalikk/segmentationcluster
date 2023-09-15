@@ -24,6 +24,11 @@
 #include "tiny_obj_loader.h"
 // #include "/tinyobj_loader_opt.h"
 
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef K::Point_3 Point_3;
+typedef CGAL::Polyhedron_3<K> Polyhedron;
+class Component;  // forward declaration
+
 // Simplified Vector3D
 struct Vector3D {
     double x, y, z;
@@ -31,30 +36,224 @@ struct Vector3D {
     Vector3D(double x, double y, double z) : x(x), y(y), z(z) {}
 };
 
-// Simplified Triangle
-struct Triangle {
-    Vector3D v1, v2, v3;
-    Triangle(Vector3D v1, Vector3D v2, Vector3D v3) : v1(v1), v2(v2), v3(v3) {}
+std::ostream& operator<<(std::ostream& os, const Vector3D& vec) {
+    os << "(" << vec.x /* replace with your member variable */ << ", " << vec.y /* replace with your member variable */ << ", " << vec.z /* replace with your member variable */ << ")";
+    return os;
+}
+
+class Triangle {
+public:
+    Vector3D vec1, vec2, vec3;
+    Vector3D normal;
+    double area;
+    double e_min;
+    double e_max;
+    Vector3D color;
+
+    Triangle() : vec1(), vec2(), vec3(), area(0.0), e_min(0.0), e_max(0.0) {}
+
+    Triangle(const Vector3D& a, const Vector3D& b, const Vector3D& c);
 };
 
-// Simplified Component
-struct Component {
-    std::vector<Triangle> triangles;
-    // Hull is simplified to a single point for demonstration
-    Vector3D hullPoint;
+Triangle::Triangle(const Vector3D& a, const Vector3D& b, const Vector3D& c)
+    : vec1(a), vec2(b), vec3(c) {
+    
+}
 
-    // Updates the "hull" when a new triangle is added
-    void updateHull() {
-        // For demonstration, let's say the hull point is just the average of all triangle vertices
-        Vector3D sum;
-        for(const auto& t : triangles) {
-            sum.x += (t.v1.x + t.v2.x + t.v3.x) / 3.0;
-            sum.y += (t.v1.y + t.v2.y + t.v3.y) / 3.0;
-            sum.z += (t.v1.z + t.v2.z + t.v3.z) / 3.0;
+// Overload the << operator for the Triangle class
+std::ostream& operator<<(std::ostream& os, const Triangle& triangle) {
+    os << "Triangle { ";
+    os << "vec1: " << triangle.vec1 << ", ";
+    os << "vec2: " << triangle.vec2 << ", ";
+    os << "vec3: " << triangle.vec3 << ", ";
+    os << "area: " << triangle.area << ", ";
+    os << "e_min: " << triangle.e_min << ", ";
+    os << "e_max: " << triangle.e_max;
+    os << " }";
+    return os;
+}
+
+
+
+class Hull {
+public:
+    std::vector<Point_3> points;
+    Polyhedron tempP;
+
+    Hull() {}
+    Hull(const Component* component);
+
+
+    static const long double EPSILON;  // Using long double for higher precision
+
+    struct PointComparator {
+        bool operator()(const Point_3& a, const Point_3& b) const {
+            auto almostEqual = [](long double x, long double y, long double epsilon) {  // Changed to long double
+                return std::abs(x - y) <= epsilon * std::max(1.0L, std::max(std::abs(x), std::abs(y)));  // Notice the "L" suffix for long double literals
+            };
+            if (!almostEqual((long double)a.x(), (long double)b.x(), EPSILON)) return a.x() < b.x();  // Cast to long double
+            if (!almostEqual((long double)a.y(), (long double)b.y(), EPSILON)) return a.y() < b.y();
+            if (!almostEqual((long double)a.z(), (long double)b.z(), EPSILON)) return a.z() < b.z();
+            return false;  // Points are considered equal
         }
-        hullPoint = {sum.x / triangles.size(), sum.y / triangles.size(), sum.z / triangles.size()};
+    };
+
+    std::set<Point_3, PointComparator> pointSet;
+
+    bool Hull::addUniquePoint(const Point_3& newPoint) {
+        auto [iter, inserted] = pointSet.emplace(newPoint);
+        if (inserted) {  
+            points.push_back(newPoint);
+        }
+        return inserted;  
+    }
+
+    void Hull::add(const Triangle& triangle) {
+        Point_3 p1(triangle.vec1.x, triangle.vec1.y, triangle.vec1.z);
+        Point_3 p2(triangle.vec2.x, triangle.vec2.y, triangle.vec2.z);
+        Point_3 p3(triangle.vec3.x, triangle.vec3.y, triangle.vec3.z);
+
+        bool p1Added = addUniquePoint(p1);
+        bool p2Added = addUniquePoint(p2);
+        bool p3Added = addUniquePoint(p3);
+
+        if (p1Added || p2Added || p3Added) { 
+            computeHull();
+        }
+    }
+
+
+
+
+    void computeHull() {
+        if (points.size() < 4) {
+            std::cout << "Not enough points for a valid 3D hull. Need at least 4." << std::endl;
+            return;
+        }
+        
+        std::cout << "Before computeHull, point count: " << points.size() << std::endl;
+        
+        // Clear the existing polyhedron
+        CGAL::convex_hull_3(points.begin(), points.end(), tempP);
+
+        std::cout << "Debug - Temp Hull Number of facets: " << tempP.size_of_facets() << std::endl;
+        std::cout << "Debug - Temp Hull Number of vertices: " << tempP.size_of_vertices() << std::endl;
+
+        // Debug: print the number of facets and vertices in the hull
+        std::cout << "Number of facets in the hull: " << tempP.size_of_facets() << std::endl;
+        std::cout << "Number of vertices in the hull: " << tempP.size_of_vertices() << std::endl;
+
+        std::cout << "After computeHull, point count: " << points.size() << std::endl;
+    }
+
+    double tetrahedronVolume(const Point_3& A, const Point_3& B, const Point_3& C, const Point_3& D) {
+        std::cout << "Calculating tetrahedron volume for points: " << A << ", " << B << ", " << C << ", " << D << std::endl;
+        K::Vector_3 AB(B - A), AC(C - A), AD(D - A);
+
+        // Calculate the cross product of AC and AD
+        K::Vector_3 cross_product = CGAL::cross_product(AC, AD);
+
+        // Compute the dot product of AB and the cross product of AC and AD
+        double volume = std::abs(AB * cross_product) / 6.0;
+        
+        return volume;
+    }
+
+
+
+    
+    double volume() const {
+        if (tempP.is_empty()) {
+            return 0.0;
+        }
+
+        double total_volume = 0.0;
+        for (auto facet = tempP.facets_begin(); facet != tempP.facets_end(); ++facet) {
+            auto h = facet->halfedge();
+            Point_3 A = h->vertex()->point();
+            Point_3 B = h->next()->vertex()->point();
+            Point_3 C = h->opposite()->vertex()->point();
+            Point_3 O(0, 0, 0); // Origin
+
+            // Calculate tetrahedron volume
+            double currentTetrahedronVolume = std::abs((A - O) * CGAL::cross_product(B - O, C - O)) / 6.0;
+
+            std::cout << "Tetrahedron Volume: " << currentTetrahedronVolume << std::endl;
+            total_volume += currentTetrahedronVolume;
+        }
+
+        return total_volume;
+    }
+
+
+
+    // Return the current set of points in the hull
+    std::vector<Point_3> getPoints() const { 
+        return points; 
+    }
+
+    // Return the current number of points in the hull
+    int getPointCount() const { 
+        return points.size(); 
+    }
+
+    void clear() {
+        pointSet.clear();
+        points.clear();
+        tempP.clear();
     }
 };
+
+const long double Hull::EPSILON = 1e-9;  // Initialize outside the class definition
+
+class Component {
+public:
+    std::vector<Triangle> triangles;
+    Hull hull;
+
+    Component() : hull() {}
+
+    void addTriangleAndUpdateHull(const Triangle& triangle) {
+        triangles.push_back(triangle);
+        hull.add(triangle);  // No need to call computeHull here, as it's already done in add.
+    }
+
+    // Function to choose the next triangle by evaluating the hull
+    std::pair<Triangle, double> chooseNextTriangle(const std::vector<Triangle>& remainingTriangles) {
+        Triangle bestTriangle;
+        double bestScore = std::numeric_limits<double>::max();
+
+        for (const Triangle& triangle : remainingTriangles) {
+            Hull tempHull = hull; // Making a copy of the existing hull
+
+            tempHull.add(triangle);  // add will internally manage whether to recompute the hull or not
+
+            if (tempHull.getPointCount() >= 4) {
+                double newVolume = tempHull.volume();
+                double oldVolume = hull.volume();
+                double volumeChange = std::abs(newVolume - oldVolume);
+
+                if (volumeChange < bestScore) {
+                    bestScore = volumeChange;
+                    bestTriangle = triangle;
+                }
+            }
+        }
+
+        return {bestTriangle, bestScore};
+    }
+};
+
+
+Hull::Hull(const Component* component) {
+    if (component) {
+        for (const auto& triangle : component->triangles) {
+            add(triangle);
+        }
+        computeHull();
+    }
+}
+
 
 struct TriangleIndices {
     int v1, v2, v3;
@@ -79,23 +278,42 @@ std::vector<Triangle> indicesToTriangles(const std::vector<TriangleIndices>& ind
     return triangles;
 }
 
-// Function to choose the next triangle based on the hull (simplified)
-Triangle chooseNextTriangleByHull(const Component& component, const std::vector<Triangle>& candidates) {
-    // Just select the triangle whose first vertex is closest to the hull point
-    double minDist = std::numeric_limits<double>::max();
-    Triangle bestTriangle = candidates[0];
-    for(const auto& t : candidates) {
-        double dist = std::sqrt(std::pow(t.v1.x - component.hullPoint.x, 2) +
-                                std::pow(t.v1.y - component.hullPoint.y, 2) +
-                                std::pow(t.v1.z - component.hullPoint.z, 2));
-        if(dist < minDist) {
-            minDist = dist;
-            bestTriangle = t;
+std::pair<Triangle, std::vector<double>> chooseNextTriangleByHull(
+    const Component& tempComponent, 
+    const std::vector<Triangle>& remainingTriangles
+) {
+    Triangle bestTriangle;
+    double bestScore = std::numeric_limits<double>::max();
+    std::vector<double> bestVolumeChanges;
+
+    std::cout << "Initial hull volume: " << tempComponent.hull.volume() << std::endl;
+
+    for (const Triangle& triangle : remainingTriangles) {
+            Hull tempHull = tempComponent.hull; // Making a copy of the hull
+
+            tempHull.add(triangle);  // add will internally manage whether to recompute the hull or not
+
+            if (tempHull.getPointCount() >= 4) {
+            double newVolume = tempHull.volume();
+            std::cout << "Volume immediately after adding triangle: " << newVolume << std::endl;
+            double oldVolume = tempComponent.hull.volume();
+            double volumeChange = std::abs(newVolume - oldVolume);
+
+            std::cout << "Old Volume: " << oldVolume << ", New Volume: " << newVolume 
+                      << ", Volume Change: " << volumeChange << std::endl;
+
+            if (volumeChange < bestScore) {
+                bestScore = volumeChange;
+                bestTriangle = triangle;
+                bestVolumeChanges.clear();
+                bestVolumeChanges.push_back(volumeChange);
+            }
         }
     }
-    return bestTriangle;
-}
 
+    std::cout << "Best Score: " << bestScore << ", Best Triangle: " << bestTriangle << std::endl;
+    return {bestTriangle, bestVolumeChanges};
+}
 
 
 int main() {
@@ -202,20 +420,34 @@ int main() {
     
     std::vector<Triangle> allTriangles = indicesToTriangles(allTriangleIndices, allVertices);
 
-    // Initialize a component with one triangle
-    Component component;
-    component.triangles.push_back(allTriangles[0]);
-    component.updateHull();
+    std::map<std::string, Component> component_hulls;
 
-    // Choose the next triangle to add to the component
-    Triangle nextTriangle = chooseNextTriangleByHull(component, allTriangles);
+    // Initialize a single component as an example
+    Component initial_component;
+    initial_component.addTriangleAndUpdateHull(allTriangles[0]);
+    component_hulls["initial_component"] = initial_component;
 
-    // Add the chosen triangle to the component and update the hull
-    component.triangles.push_back(nextTriangle);
-    component.updateHull();
+    std::vector<std::vector<Triangle>> candidate_triangle_sets;  
+    // Assuming you populate this vector with your sets of candidate triangles.
 
-    // Output for verification
-    std::cout << "New Hull Point: (" << component.hullPoint.x << ", " << component.hullPoint.y << ", " << component.hullPoint.z << ")\n";
+    // Add your new logic here
+    for (auto& triangle_set : candidate_triangle_sets) {
+        std::map<std::string, Triangle> best_triangle_per_component;
+
+        // Loop through each component
+        for (auto& [component_name, component] : component_hulls) {
+            auto [best_triangle, best_score] = component.chooseNextTriangle(triangle_set);
+            best_triangle_per_component[component_name] = best_triangle;
+        }
+
+        // Add best triangles to each component's hull
+        for (auto& [component_name, best_triangle] : best_triangle_per_component) {
+            component_hulls[component_name].addTriangleAndUpdateHull(best_triangle);
+        }
+    }
+
+    // Test 3: Check points and volume after adding a second triangle
+    // std::cout << "Hull Volume after adding 2 triangles: " << component.hull.volume() << std::endl;
 
     return 0;
 }
