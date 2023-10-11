@@ -796,6 +796,16 @@ struct Component {
     bool isEmpty() const {
         return triangles.empty();
     }
+
+    bool containsTriangle(const Triangle& queryTriangle) const {
+        for (const auto& existingTriangle : triangles) {
+            if (existingTriangle == queryTriangle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 };
 
 struct ComponentHash {
@@ -808,13 +818,6 @@ struct ComponentHash {
         return hashValue;
     }
 };
-
-
-// Function to calculate the weight of a component type.
-double getWeightOfComponent(const std::unordered_map<std::string, int>& typeCounts, const std::string& typeString) {
-    int frequency = typeCounts.count(typeString) ? typeCounts.at(typeString) : 1; // default frequency is 1 to avoid division by zero
-    return 1.0 / std::pow(frequency, 2); // This is |Zi|^2 in the denominator
-}
 
 
 // Function to identify the component type
@@ -932,6 +935,7 @@ bool Component::overlapsSignificantly(const Component& other) {
 }
 
 void mergeOverlappingComponents(std::vector<Component>& components, TriangleAdjacency& adjacency) {
+    exit(1);
     std::set<int> toRemove;  // To keep track of indices to remove
 
     // Debug: Count total triangles before merging
@@ -941,29 +945,30 @@ void mergeOverlappingComponents(std::vector<Component>& components, TriangleAdja
     }
     std::cout << "Total triangles before merging: " << totalTrianglesBefore << std::endl;
 
+    // Store volumes to avoid redundant calculations
+    std::vector<double> volumes(components.size(), 0.0);
+    for (int i = 0; i < components.size(); ++i) {
+        Hull hull_i = Hull(components[i].triangles);
+        volumes[i] = hull_i.volume();
+    }
+
     for (int i = 0; i < components.size(); ++i) {
         if (toRemove.count(i) > 0) {
             continue;  // Skip already removed components
         }
 
-        Hull hull_i = Hull(components[i].triangles); 
-        double volume_i = hull_i.volume();
+        double volume_i = volumes[i];
 
         for (int j = i + 1; j < components.size(); ++j) {
             if (toRemove.count(j) > 0) {
                 continue;  // Skip already removed components
             }
 
-            Hull hull_j = Hull(components[j].triangles);  // Computing the hull only once for efficiency
-            double volume_j = hull_j.volume();
+            double volume_j = volumes[j];
 
             // Check for type and significant overlap
             if (components[i].type == components[j].type && components[i].overlapsSignificantly(components[j])) {
                 if (attemptToMergeComponents(components[i], components[j], adjacency)) {
-                    for (const auto& triangle : components[i].triangles) {
-                        std::cout << triangle.toString() << std::endl;
-                    }
-
                     toRemove.insert(j);  // Mark for removal
                 }
             }
@@ -986,6 +991,7 @@ void mergeOverlappingComponents(std::vector<Component>& components, TriangleAdja
         std::cout << "Warning: Some triangles are missing!" << std::endl;
     }
 }
+
 
 
 double ATaTb(const Cluster& Ta, const Cluster& Tb, 
@@ -1180,22 +1186,67 @@ std::vector<Cluster> initialClusteringByShapeSimilarity(const std::vector<Triang
 }
 
 
+struct AlgorithmState {
+    std::vector<Component> tempComponents;
+    std::unordered_set<Triangle> remainingTriangles;
+    std::unordered_set<Triangle> usedTriangles;
+    std::vector<int> repetitionCounts;
+    std::vector<double> componentWeights;
+    std::vector<double> globalVolumeChangeHistory;
+
+    std::vector<std::vector<std::pair<double, Triangle>>> adjustedCandidateTriangles;
+    std::vector<std::stack<std::vector<Triangle>>> backtrackCandidateStacks;
+    std::vector<bool> componentsStalled;
+    std::stack<int> componentIndexStack;
+    std::vector<std::stack<Triangle>> issueTrianglesStacks;
+    std::unordered_set<std::string> triedCombinations;
+    std::map<int, std::deque<Triangle>> trianglesThatLedToThisState;
+    std::vector<std::vector<std::pair<Triangle, double>>> candidateTriangles;
+    bool anyComponentGrown;
+    bool allComponentsStalled;
+
+};
+
+void printSet(const std::unordered_set<Triangle>& mySet) {
+    std::cout << "{";
+    for (auto it = mySet.begin(); it != mySet.end(); ++it) {
+        if (it != mySet.begin()) {
+            std::cout << ", ";
+        }
+        std::cout << it->toString();
+    }
+    std::cout << "}" << std::endl;
+}
+
+void printCandidateTrianglesForComponents(const std::vector<std::vector<std::pair<Triangle, double>>>& candidateTrianglesForComponents) {
+    for (size_t i = 0; i < candidateTrianglesForComponents.size(); ++i) {
+        std::cout << "Component " << i<< ":\n";
+        for (const auto& pair : candidateTrianglesForComponents[i]) {
+            Triangle triangle = pair.first;
+            double score = pair.second;
+            std::cout << "Triangle: " << triangle.toString() << ", Score: " << score << "\n";
+        }
+        std::cout << std::endl;
+    }
+}
+
+
 std::vector<std::vector<std::pair<Triangle, double>>> getCandidateTrianglesForEachComponent(
-    const std::vector<Component>& tempComponents, 
-    const std::unordered_set<Triangle>& remainingTriangles,  
+    const AlgorithmState& currentState,  // Pass currentState to the function
     size_t topN = 3  
 ) {
     std::vector<std::vector<std::pair<Triangle, double>>> candidateTrianglesForComponents;
-    std::unordered_set<Triangle> alreadyChosenTriangles;
 
-    for (const Component& component : tempComponents) {
+    for (const Component& component : currentState.tempComponents) {
         std::priority_queue<std::pair<double, Triangle>> candidatePriorityQueue;
         
         // Using .volume() directly, since it's not an optional anymore.
         double originalVolume = component.convexHull.volume();
 
-        for (const Triangle& triangle : remainingTriangles) {
-            if (alreadyChosenTriangles.find(triangle) != alreadyChosenTriangles.end()) {
+        for (const Triangle& triangle : currentState.remainingTriangles) {
+            // Check if this triangle has already been used
+            if (currentState.usedTriangles.find(triangle) != currentState.usedTriangles.end()) {
+                std::cout << "Skipping triangle: " << triangle.toString() << " (Already used)" << std::endl;
                 continue;
             }
 
@@ -1225,14 +1276,15 @@ std::vector<std::vector<std::pair<Triangle, double>>> getCandidateTrianglesForEa
             Triangle triangle = scoreTrianglePair.second;
 
             topCandidates.push_back({triangle, score});
-            alreadyChosenTriangles.insert(triangle);
+            // std::cout << "Top candidate: " << triangle.toString() << ", score: " << score << std::endl;
         }
 
         candidateTrianglesForComponents.push_back(topCandidates);
     }
-
+    // printCandidateTrianglesForComponents(candidateTrianglesForComponents);
     return candidateTrianglesForComponents;
 }
+
 
 
 double calculateConvexHullChange(const Component& component, const Triangle& candidateTriangle) {
@@ -1253,72 +1305,45 @@ double calculateConvexHullChange(const Component& component, const Triangle& can
     return std::abs(newVolume - originalVolume);  // Returns absolute change in volume
 }
 
-double calculateGlobalRepetitionFactor(const std::vector<double>& globalVolumeChangeHistory, const std::vector<double>& minConvexHullChanges) {
-    // If there's not enough data, return a neutral factor
-    if (globalVolumeChangeHistory.empty() || minConvexHullChanges.empty()) return 1.0;
-
-    // Calculate the mean and variance of the historical volume changes
-    double mean = std::accumulate(globalVolumeChangeHistory.begin(), globalVolumeChangeHistory.end(), 0.0) / globalVolumeChangeHistory.size();
-    double sq_sum = std::inner_product(globalVolumeChangeHistory.begin(), globalVolumeChangeHistory.end(), globalVolumeChangeHistory.begin(), 0.0);
-    double variance = (sq_sum / globalVolumeChangeHistory.size()) - (mean * mean);
-
-    // If variance is zero, the system is perfectly repetitive
-    if (variance == 0) return 1.0;
-
-    // Calculate the mean of current minimum changes
-    double currentMean = std::accumulate(minConvexHullChanges.begin(), minConvexHullChanges.end(), 0.0) / minConvexHullChanges.size();
-  
-    // Calculate a repetition factor based on how close the current mean is to the historical mean, and how low the variance is
-    double distanceToMean = std::abs(currentMean - mean);
-    double repetitionFactor = std::exp(-distanceToMean / variance);
-
-    return repetitionFactor;
-}
-
-std::vector<std::vector<Triangle>> synchronizeGrowth(
-    const std::vector<std::vector<std::pair<double, Triangle>>>& adjustedCandidateTriangles,
-    const std::vector<double>& minConvexHullChanges,
-    const std::vector<double>& componentWeights,  // Updated this line to match the new type
-    const std::vector<double>& globalVolumeChangeHistory,
-    bool weightImpactAlreadyApplied = false, // New flag
-    bool getTopN = true,
-    size_t N = 1)
-{
-    if (adjustedCandidateTriangles.empty()) {
-        return {};
-    }
-
-    std::vector<std::vector<Triangle>> bestTrianglesForComponents(adjustedCandidateTriangles.size());
-
-    double globalMinChange = *std::min_element(minConvexHullChanges.begin(), minConvexHullChanges.end());
+// Define a struct to hold a set of best triangles along with their global change value
+struct BestTriangleSet {
+    double globalChange;
+    std::vector<Triangle> triangles;
     
-    // Calculate global repetition factor
-    double globalRepetitionFactor = calculateGlobalRepetitionFactor(globalVolumeChangeHistory, minConvexHullChanges);
-
-    for (size_t i = 0; i < adjustedCandidateTriangles.size(); ++i) {
-        std::vector<Triangle> topTriangles;
-        std::priority_queue<std::pair<double, Triangle>> pq;
-
-        for (const auto& candidatePair : adjustedCandidateTriangles[i]) {
-            double change = candidatePair.first;
-            const Triangle& candidate = candidatePair.second;
-
-            change *= globalRepetitionFactor;  // Apply global repetition factor
-
-            pq.push({-std::abs(change - globalMinChange), candidate});
-        }
-
-        while (!pq.empty() && topTriangles.size() < N) {
-            topTriangles.push_back(pq.top().second);
-            pq.pop();
-        }
-        bestTrianglesForComponents[i] = topTriangles;
+    bool operator<(const BestTriangleSet& other) const {
+        return globalChange < other.globalChange;
     }
+};
 
-    return bestTrianglesForComponents;
+void findBestTrianglesRecursively(
+    const std::vector<std::vector<std::pair<double, Triangle>>>& candidatesForComponents,
+    std::vector<Triangle>& currentCombination,
+    double currentGlobalChange,
+    double globalRepetitionFactor,
+    std::priority_queue<BestTriangleSet>& bestTriangleSets,
+    size_t componentIndex = 0) {
+    
+    if (componentIndex == candidatesForComponents.size()) {
+        // Base case: We've selected one triangle for each component
+        BestTriangleSet newSet;
+        newSet.globalChange = currentGlobalChange * globalRepetitionFactor;
+        newSet.triangles = currentCombination;
+        bestTriangleSets.push(newSet);
+        return;
+    }
+    
+    for (const auto& candidate : candidatesForComponents[componentIndex]) {
+        currentCombination[componentIndex] = candidate.second;
+        findBestTrianglesRecursively(
+            candidatesForComponents,
+            currentCombination,
+            currentGlobalChange + candidate.first,
+            globalRepetitionFactor,
+            bestTriangleSets,
+            componentIndex + 1
+        );
+    }
 }
-
-
 
 static bool isValidAfterAddingTriangle(const Component& component, const Triangle& newTriangle) {
     // Check if the triangle is already in the component
@@ -1330,6 +1355,75 @@ static bool isValidAfterAddingTriangle(const Component& component, const Triangl
     std::vector<Triangle> tempTriangles = component.triangles;
     tempTriangles.push_back(newTriangle);
     return areTrianglesContiguous(tempTriangles);  // Assuming you can call this function directly
+}
+
+
+double calculateGlobalRepetitionFactor(
+    const std::vector<double>& globalVolumeChangeHistory,
+    const std::vector<double>& minConvexHullChanges) {
+    
+    // If there's not enough data, return a neutral factor
+    if (globalVolumeChangeHistory.empty() || minConvexHullChanges.empty()) {
+        return 1.0;
+    }
+
+    // Calculate the mean and variance of the historical volume changes
+    double mean = std::accumulate(globalVolumeChangeHistory.begin(), globalVolumeChangeHistory.end(), 0.0) / globalVolumeChangeHistory.size();
+    double sq_sum = std::inner_product(globalVolumeChangeHistory.begin(), globalVolumeChangeHistory.end(), globalVolumeChangeHistory.begin(), 0.0);
+    double variance = (sq_sum / globalVolumeChangeHistory.size()) - (mean * mean);
+
+    // If variance is zero, the system is perfectly repetitive
+    if (variance == 0) {
+        return 1.0;
+    }
+
+    // Calculate the mean of the current minimum changes
+    double currentMean = std::accumulate(minConvexHullChanges.begin(), minConvexHullChanges.end(), 0.0) / minConvexHullChanges.size();
+  
+    // Calculate a repetition factor based on how close the current mean is to the historical mean, and how low the variance is
+    double distanceToMean = std::abs(currentMean - mean);
+    double repetitionFactor = std::exp(-distanceToMean / variance);
+
+    return repetitionFactor;
+}
+
+std::vector<std::vector<Triangle>> synchronizeGrowth(
+    AlgorithmState& currentState,
+    const std::vector<double>& minConvexHullChanges,
+    bool considerRepetition) {
+
+    // Directly use currentState.adjustedCandidateTriangles without copying
+    auto& candidatesForComponents = currentState.adjustedCandidateTriangles;
+
+    double globalRepetitionFactor = 1.0;
+    if (considerRepetition) {
+        globalRepetitionFactor = calculateGlobalRepetitionFactor(currentState.globalVolumeChangeHistory, minConvexHullChanges);
+    }
+
+    std::priority_queue<BestTriangleSet> bestTriangleSets;
+    std::vector<Triangle> currentCombination(currentState.tempComponents.size());
+
+    findBestTrianglesRecursively(
+        candidatesForComponents,
+        currentCombination,
+        0.0,
+        globalRepetitionFactor,
+        bestTriangleSets
+    );
+
+    std::vector<std::unordered_set<Triangle>> uniqueTrianglesForComponents(currentState.tempComponents.size());
+    std::vector<std::vector<Triangle>> bestTrianglesForComponents(currentState.tempComponents.size());
+
+    while (!bestTriangleSets.empty()) {
+        const BestTriangleSet& bestSet = bestTriangleSets.top();
+        for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+            if (uniqueTrianglesForComponents[i].insert(bestSet.triangles[i]).second) {
+                bestTrianglesForComponents[i].push_back(bestSet.triangles[i]);
+            }
+        }
+        bestTriangleSets.pop();
+    }
+    return bestTrianglesForComponents;
 }
 
 
@@ -1404,12 +1498,12 @@ double calculateWeight(int repetitionCount) {
 
 
 bool isValidWeight(double newWi, double oldWi) {
-    std::cout << "New weight: " << newWi << std::endl;
-    std::cout << "Old weight: " << oldWi << std::endl;
 
-    // We only check for less than as per the paper's instruction to lower the weight
-    return (newWi < oldWi);
+    // We only check for less than or equal to because lower weight is better
+    // and the weight may not change (stay equal) in some iterations
+    return (newWi <= oldWi);
 }
+
 
 std::string serializePathVector(const std::vector<Component>& components) {
     std::stringstream ss;
@@ -1478,487 +1572,261 @@ void printIndexStack(std::stack<int> &originalStack) {
     }
 }
 
-enum StallReason {
-    None,
-    BestTriangleUsed,
-    NoBestTriangles
-};
+void printBestTrianglesForComponents(const std::vector<std::vector<Triangle>>& bestTrianglesForComponents) {
+    for (size_t i = 0; i < bestTrianglesForComponents.size(); ++i) {
+        std::cout << "Component " << i << ":\n";
+        for (const Triangle& triangle : bestTrianglesForComponents[i]) {
+            std::cout << "Triangle: " << triangle.toString() << "\n";
+        }
+        std::cout << std::endl;
+    }
+}
 
-bool applyGreedyAlgorithm(
-    std::vector<Component>& tempComponents,
-    std::unordered_set<Triangle>& remainingTriangles,
-    std::unordered_set<Triangle>& usedTriangles,
-    std::vector<int>& repetitionCounts,
-    std::vector<double>& componentWeights,
-    std::vector<double>& globalVolumeChangeHistory,
-    std::vector<std::stack<Triangle>>& issueTrianglesStacks,
-    bool successfulRun,
-    int componentIndex
-) {
+// std::string generateKeyForCombination(const std::vector<Triangle>& bestTrianglesForComponents) {
+//     std::ostringstream keyStream;
+//     for (const auto& triangle : bestTrianglesForComponents) {
+//         // Assuming Triangle class has a method to uniquely identify it, like a hash or a unique ID
+//         keyStream << triangle.toString() << "-";
+//     }
+//     std::string key = keyStream.str();
+//     // Remove the trailing '-'
+//     if (!key.empty()) {
+//         key.pop_back();
+//     }
+//     return key;
+// }
+std::string generateKeyForCombination(const std::map<int, std::deque<Triangle>> &trianglesMap) {
+    std::string key;
+    for (const auto& pair : trianglesMap) {
+        int componentIndex = pair.first;
+        const std::deque<Triangle>& triangles = pair.second;
+        for (const auto& triangle : triangles) {
+            key += triangle.toString() + ";";
+        }
+    }
+    return key;
+}
 
-    static std::unordered_set<std::string> triedPaths;
-    // Generate serialized key based on the current state of tempComponents and componentIndex
-    std::string currentPathId = serializePathVector(tempComponents);
-    std::string serializedKey = currentPathId + "|" + std::to_string(componentIndex);
+int countOccurrences(const std::string& str, const std::string& sub) {
+    int count = 0;
+    size_t pos = 0;
+    while ((pos = str.find(sub, pos)) != std::string::npos) {
+        ++count;
+        pos += sub.size();
+    }
+    return count;
+}
 
-    // Check if this path has been tried before
-    if (triedPaths.find(serializedKey) != triedPaths.end()) {
-        // This path has already been tried; you may want to return false or handle this accordingly
+void generateCrossCombinationsRecursive(
+    const std::vector<std::vector<Triangle>>& groupedByComponent, 
+    std::vector<std::pair<int, Triangle>>& currentCombination, 
+    std::vector<std::vector<std::pair<int, Triangle>>>& allCombinations,
+    size_t currentIndex,
+    int lastUpdatedIndex) 
+{
+    if (currentIndex == groupedByComponent.size()) {
+        allCombinations.push_back(currentCombination);
+        return;
+    }
+
+    for (size_t i = lastUpdatedIndex + 1; i < groupedByComponent.size(); ++i) {
+        for (const auto& triangle1 : groupedByComponent[currentIndex]) {
+            for (const auto& triangle2 : groupedByComponent[i]) {
+                currentCombination.push_back({static_cast<int>(currentIndex), triangle1});
+                currentCombination.push_back({static_cast<int>(i), triangle2});
+                generateCrossCombinationsRecursive(groupedByComponent, currentCombination, allCombinations, currentIndex + 1, i);
+                currentCombination.pop_back();
+                currentCombination.pop_back();
+            }
+        }
+    }
+}
+
+std::vector<std::vector<std::pair<int, Triangle>>> generateCrossCombinations(
+    const std::vector<std::vector<Triangle>>& groupedByComponent) 
+{
+    std::vector<std::vector<std::pair<int, Triangle>>> allCombinations;
+    std::vector<std::pair<int, Triangle>> currentCombination;
+    generateCrossCombinationsRecursive(groupedByComponent, currentCombination, allCombinations, 0, -1);
+    return allCombinations;
+}
+
+
+//might have to consider popping globalBacktrackStack back on?
+bool recursiveBackTracking(std::stack<AlgorithmState> globalBacktrackStack,
+                            AlgorithmState& currentState,
+                            int maxAlternatives = 0) {
+
+    if (globalBacktrackStack.empty()) {
+        std::cout << "Global backtrack stack is empty" << std::endl;
+        exit(1);
+        return false;  // No solution exists
+    }
+
+    if (maxAlternatives == 3) {
+        std::cout << "Max alternatives reached" << std::endl;
         return false;
     }
 
-    // If not, proceed with the existing logic and add this path to triedPaths
-    triedPaths.insert(serializedKey);
-    // Now apply the greedy algorithm again but avoid the issue triangles
-    auto candidateTriangles = getCandidateTrianglesForEachComponent(tempComponents, remainingTriangles);  // Assuming this function exists
-
-    std::vector<double> minConvexHullChanges(tempComponents.size(), std::numeric_limits<double>::infinity());
-    std::vector<std::vector<std::pair<double, Triangle>>> adjustedCandidateTriangles(tempComponents.size());
-
-    // Modified loop for considering both primary and alternate candidates
-    for (size_t i = 0; i < tempComponents.size(); ++i) {
-        int repetitionCount = repetitionCounts[i];
-        double weightImpact = componentWeights[i];
-
-        for (const auto& candidatePair : candidateTriangles[i]) {
-            const Triangle& candidate = candidatePair.first;
-            double change = calculateConvexHullChange(tempComponents[i], candidate);
-            change *= weightImpact;
-            minConvexHullChanges[i] = std::min(minConvexHullChanges[i], change);
-            adjustedCandidateTriangles[i].emplace_back(change, candidate);
+    std::vector<std::pair<int, Triangle>> allAlternateTriangles;
+    for (size_t i = 0; i < currentState.backtrackCandidateStacks.size(); ++i) {
+        if (!currentState.backtrackCandidateStacks[i].empty()) {
+            const std::vector<Triangle>& alternateTriangles = currentState.backtrackCandidateStacks[i].top();
+            for (const auto& triangle : alternateTriangles) {
+                allAlternateTriangles.emplace_back(i, triangle);
+            }
         }
     }
 
-    std::cout << "MIN CONVEX HULL CHANGE: " << minConvexHullChanges.size() << std::endl;
+    // A vector to hold shuffled triangles, preserving component order
+    std::vector<std::pair<int, Triangle>> shuffledTriangles;
 
-    size_t N = 3;  // Number of top candidates to retrieve. 3 is arbitrary; set your desired number.
-    auto bestTrianglesForComponents = synchronizeGrowth(adjustedCandidateTriangles, minConvexHullChanges, componentWeights, globalVolumeChangeHistory, true, N);
-    std::cout << "Best triangles for components size: " << bestTrianglesForComponents.size() << std::endl;
+    // Seed for random shuffling
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-    for (const Triangle& alternativeTriangle : bestTrianglesForComponents[componentIndex]) {
-        // Skip the problematic triangles
-        if (!issueTrianglesStacks[componentIndex].empty() && issueTrianglesStacks[componentIndex].top() == alternativeTriangle) {
+    for (size_t i = 0; i < currentState.backtrackCandidateStacks.size(); ++i) {
+        std::cout << "Checking component: " << i << std::endl;
+
+        if (currentState.backtrackCandidateStacks[i].empty()) {
+            std::cout << "No more alternate triangles for component " << i << std::endl;
             continue;
         }
-        
-        if (usedTriangles.find(alternativeTriangle) == usedTriangles.end()) {
-                // Your existing validation logic here, including weight and convex hull checks
-            int oldZi = repetitionCounts[componentIndex]; // Store the current repetition count
-            int hypotheticalNewZi = oldZi + 1;
-            double oldWi = calculateWeight(oldZi);
-            double hypotheticalNewWi = calculateWeight(hypotheticalNewZi);
 
-            if (isValidAfterAddingTriangle(tempComponents[componentIndex], alternativeTriangle) && 
-                isValidWeight(hypotheticalNewWi, oldWi)) {
-                    tempComponents[componentIndex].addTriangle(alternativeTriangle);  // Add the triangle to the component
-                    repetitionCounts[componentIndex] = hypotheticalNewZi; // Update the repetition count to the hypothetical new value
-                    componentWeights[componentIndex] = hypotheticalNewWi;  // Update the weight to the hypothetical new value
+        // Extract the top triangles for this component
+        std::vector<Triangle> componentTriangles = currentState.backtrackCandidateStacks[i].top();
 
-                    std::cout << "IS VALID AFTER ADDING TRIANGLE " << true << std::endl;
+        // Shuffle them
+        std::shuffle(componentTriangles.begin(), componentTriangles.end(), std::default_random_engine(seed));
 
-                    double convexHullChange = minConvexHullChanges[componentIndex];
-                    std::cout << "Convex hull change for component " << componentIndex << ": " << convexHullChange << std::endl;
+        // Add them back to the shuffledTriangles vector, preserving component index
+        for (const auto& triangle : componentTriangles) {
+            shuffledTriangles.emplace_back(i, triangle);
+        }
+    }
+
+    std::vector<std::vector<Triangle>> groupedByComponent(currentState.tempComponents.size());
+
+    for (const auto& pair : shuffledTriangles) {
+        int componentIndex = pair.first;
+        Triangle triangle = pair.second;
+        groupedByComponent[componentIndex].push_back(triangle);
+    }
+
+    auto originalState = currentState.trianglesThatLedToThisState;
+    for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+        if (groupedByComponent[i].empty()) {
+            std::cout << "EMPTYYY" << std::endl;
+            exit(1);
+        }
+        for (size_t j = 0; j < currentState.tempComponents.size(); ++j) {
+            Triangle bestTriangleForValidation = groupedByComponent[j][i];
+            std::cout << "Trying triangle " << bestTriangleForValidation.toString() << " for component " << j << std::endl;
+            
+            // Step 2: Add new triangles
+            currentState.trianglesThatLedToThisState[i].push_back(bestTriangleForValidation);
+        }
+    }
+
+    std::string key = generateKeyForCombination(currentState.trianglesThatLedToThisState);
+
+    std::cout << "Contents of triedCombinations:" << std::endl;
+    for (const auto& key : currentState.triedCombinations) {
+        int numTriangles = countOccurrences(key, ";");
+        std::cout << "Number of triangles in this key: " << numTriangles << std::endl;
+    }
+
+    // Step 4: Check if this combination has already been tried
+    if (currentState.triedCombinations.find(key) != currentState.triedCombinations.end()) {
+        std::cout << "Combination already tried for component, reverting and skipping." << std::endl;
+
+        // Step 6: Revert to original state if this path has already been tried
+        currentState.trianglesThatLedToThisState = originalState;
+
+        return recursiveBackTracking(globalBacktrackStack, currentState, maxAlternatives + 1);
+    }
+    else {
+        std::cout << "Key not found in triedCombinations." << std::endl;
+        // Mark this combination as "tried"
+        bool successfullyAddedTriangles = false;
+        currentState.triedCombinations.insert(key);
+        for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+            if (groupedByComponent[i].empty()) {
+                std::cout << "EMPTYYY" << std::endl;
+                continue;
+            }
+            // Initialize vectors for hypothetical updates
+            std::vector<int> hypotheticalNewZi(currentState.tempComponents.size());
+            std::vector<double> hypotheticalNewWi(currentState.tempComponents.size());
+
+            // Calculate hypothetical new values
+            for (size_t j = 0; j < currentState.tempComponents.size(); ++j) {
+                int oldZi = currentState.repetitionCounts[j];
+                hypotheticalNewZi[j] = oldZi + 1;
+                double oldWi = currentState.componentWeights[j];
+                hypotheticalNewWi[j] = calculateWeight(hypotheticalNewZi[j]);
+            }
+
+            // Validate triangles and weights
+            bool allUpdatesAreValid = true;
+            for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+                Triangle bestTriangleForValidation = groupedByComponent[i][0];  // Assumes groupedByComponent[i] is not empty
+
+                std::cout << "Validating after adding triangle " << isValidAfterAddingTriangle(currentState.tempComponents[i], bestTriangleForValidation) << std::endl;
+                std::cout << "Validating weight " << isValidWeight(hypotheticalNewWi[i], currentState.componentWeights[i]) << std::endl;
+
+                if (!isValidAfterAddingTriangle(currentState.tempComponents[i], bestTriangleForValidation) || 
+                    !isValidWeight(hypotheticalNewWi[i], currentState.componentWeights[i]) ||
+                    currentState.usedTriangles.find(bestTriangleForValidation) != currentState.usedTriangles.end()) {
                     
-                    remainingTriangles.erase(alternativeTriangle);
-                    usedTriangles.insert(alternativeTriangle);
-                    tempComponents[componentIndex].id = componentIndex;
-                    globalVolumeChangeHistory.push_back(convexHullChange);
-                    successfulRun = true;
-            }
-            else {
-                successfulRun = false;
-            }
-
-        }
-    }
-    return successfulRun;
-}
-
-bool recursiveBackTracking(
-    std::stack<std::vector<Component>>& globalBacktrackStack,
-    std::stack<std::vector<Component>>& unhappyBacktrackStack,
-    std::vector<std::stack<Triangle>>& issueTrianglesStacks,
-    std::vector<StallReason> stallReasons,
-    std::stack<int> componentIndexStack,
-    std::vector<Component>& tempComponents,
-    std::unordered_set<Triangle>& remainingTriangles,
-    std::unordered_set<Triangle>& usedTriangles,
-    std::vector<int>& repetitionCounts,
-    std::vector<double>& componentWeights,
-    std::vector<double>& globalVolumeChangeHistory,
-    int depth)
-{
-
-    if(depth >= 3) {
-        return false;
-    }
-
-    // Check if we need to backtrack to a good state
-    if (!globalBacktrackStack.empty()) {
-        tempComponents = globalBacktrackStack.top();  // Set tempComponents to the last good state
-        globalBacktrackStack.pop();  // Remove the last good state from the stack
-
-        // Optionally, clear unhappyBacktrackStack, issueTrianglesStacks, and other data structures here
-    } else {
-        return false;  // No good states to revert to
-    }
-
-    if (componentIndexStack.size() > 1) {
-        // Full Backtrack
-        //Maybe instead of popping the entire top stack, we can just pop the top element
-        // New Logic: Identify components that have extra triangles (fulfilled but overgrew)
-        std::vector<int> overgrewComponentIndices;
-        // Logic to fill overgrewComponentIndices; this might involve comparing globalBacktrackStack and unhappyBacktrackStack.
-
-        // New Logic: Remove the last added triangle for each overgrew component in tempComponents
-        for (const int i : overgrewComponentIndices) {
-            Triangle lastAddedTriangle = tempComponents[i].getLastTriangle();
-            tempComponents[i].removeTriangle(lastAddedTriangle);
-
-            // Update remainingTriangles and usedTriangles
-            remainingTriangles.insert(lastAddedTriangle);
-            usedTriangles.erase(lastAddedTriangle);
-        }
-
-        bool successfulRun = false; // Keep track if the run is successful
-
-        // Remove the last added triangle from each specific component in tempComponents
-        for (const int i : specificComponentIndices) {
-            Triangle lastAddedTriangle = tempComponents[i].getLastTriangle();  // Assuming getLastTriangle() exists
-            tempComponents[i].removeTriangle(lastAddedTriangle); // Remove from component
-            remainingTriangles.insert(lastAddedTriangle);  // Put back into remainingTriangles
-            usedTriangles.erase(lastAddedTriangle);  // Remove from usedTriangles
-
-            successfulRun = applyGreedyAlgorithm(tempComponents, remainingTriangles, usedTriangles, 
-            repetitionCounts, componentWeights, 
-            globalVolumeChangeHistory, issueTrianglesStacks,
-            successfulRun, i);
-        }
-
-        if (!successfulRun) {
-            // Recursively call the backtracking function with incremented depth
-            return recursiveBackTracking(
-                globalBacktrackStack,
-                unhappyBacktrackStack,
-                issueTrianglesStacks,
-                stallReasons,
-                componentIndexStack,
-                tempComponents,
-                remainingTriangles,
-                usedTriangles,
-                repetitionCounts,
-                componentWeights,
-                globalVolumeChangeHistory,
-                depth + 1  // Increment depth
-            );
-        }
-
-        // If the run is successful, clear the issue triangles as they are no longer relevant
-        if (successfulRun) {
-            for (auto& stack : issueTrianglesStacks) {
-                while (!stack.empty()) {
-                    stack.pop();
-                }
-            }
-            //remove the componentIndexStack so it doesn't go in the below while loop
-            while (!componentIndexStack.empty()) {
-                int componentIndex = componentIndexStack.top();
-                componentIndexStack.pop();
-            }
-        } else {
-            return false;
-        }
-    }
-
-
-    if (componentIndexStack.size() == 1) {
-        // Initialize variables for this iteration
-        bool anyComponentGrown = false;
-        bool allComponentsStalled = true;
-        std::vector<Component> grownTempComponents;
-        std::vector<Component> badlyGrownTempComponents;
-        std::vector<bool> componentsStalled(tempComponents.size(), false);
-
-        int failedComponentIndex = -1;
-        if (!componentIndexStack.empty()) {
-            failedComponentIndex = componentIndexStack.top();
-            componentIndexStack.pop();  // Remove this index as it is now being processed
-        }
-
-        auto candidateTriangles = getCandidateTrianglesForEachComponent(tempComponents, remainingTriangles);
-
-        std::cout << "Candidate triangles size: " << candidateTriangles.size() << std::endl;
-
-        std::vector<double> minConvexHullChanges(tempComponents.size(), std::numeric_limits<double>::infinity());
-        std::vector<std::vector<std::pair<double, Triangle>>> adjustedCandidateTriangles(tempComponents.size());
-
-        // Modified loop for considering both primary and alternate candidates
-        for (size_t i = 0; i < tempComponents.size(); ++i) {
-            int repetitionCount = repetitionCounts[i];
-            double weightImpact = componentWeights[i];
-
-            for (const auto& candidatePair : candidateTriangles[i]) {
-                const Triangle& candidate = candidatePair.first;
-                double change = calculateConvexHullChange(tempComponents[i], candidate);
-                change *= weightImpact;
-                minConvexHullChanges[i] = std::min(minConvexHullChanges[i], change);
-                adjustedCandidateTriangles[i].emplace_back(change, candidate);
-            }
-        }
-
-        std::cout << "MIN CONVEX HULL CHANGE: " << minConvexHullChanges.size() << std::endl;
-
-        size_t N = 3;  // Number of top candidates to retrieve. 3 is arbitrary; set your desired number.
-        auto bestTrianglesForComponents = synchronizeGrowth(adjustedCandidateTriangles, minConvexHullChanges, componentWeights, globalVolumeChangeHistory, true, N);
-        std::cout << "Best triangles for components size: " << bestTrianglesForComponents.size() << std::endl;
-        for (size_t i = (failedComponentIndex == -1 ? 0 : failedComponentIndex); i < tempComponents.size(); ++i) {
-            StallReason currentStallReason = stallReasons[i];
-
-            if (currentStallReason == StallReason::BestTriangleUsed) {
-                Triangle issueTriangle;
-                if (!issueTrianglesStacks[i].empty()) {
-                    issueTriangle = issueTrianglesStacks[i].top();  // Assuming the stack's top contains the latest issue triangle
-                }
-
-                for (const Triangle& alternativeTriangle : bestTrianglesForComponents[i]) {
-                    // Skip the problematic triangle
-                    if (issueTriangle == alternativeTriangle) {
-                        continue;
-                    }
-                    // if (alreadyTriedTrianglesForComponents[i].find(alternativeTriangle) != alreadyTriedTrianglesForComponents[i].end()) {
-                    //     continue;
-                    // }
-
-                    // Check if the alternative triangle is unused
-                    if (usedTriangles.find(alternativeTriangle) == usedTriangles.end()) {
-                         // Your existing validation logic here, including weight and convex hull checks
-                        int oldZi = repetitionCounts[i]; // Store the current repetition count
-                        int hypotheticalNewZi = oldZi + 1;
-                        double oldWi = calculateWeight(oldZi);
-                        double hypotheticalNewWi = calculateWeight(hypotheticalNewZi);
-
-                        if (isValidAfterAddingTriangle(tempComponents[i], alternativeTriangle) && 
-                            isValidWeight(hypotheticalNewWi, oldWi)) {
-                                tempComponents[i].addTriangle(alternativeTriangle);  // Add the triangle to the component
-                                repetitionCounts[i] = hypotheticalNewZi; // Update the repetition count to the hypothetical new value
-                                componentWeights[i] = hypotheticalNewWi;  // Update the weight to the hypothetical new value
-
-                                std::cout << "IS VALID AFTER ADDING TRIANGLE " << true << std::endl;
-
-                                double convexHullChange = minConvexHullChanges[i];
-                                std::cout << "Convex hull change for component " << i << ": " << convexHullChange << std::endl;
-                                
-                                remainingTriangles.erase(alternativeTriangle);
-                                anyComponentGrown = true;
-                                usedTriangles.insert(alternativeTriangle);
-                                // componentIndexStack.push(i);
-                                tempComponents[i].id = i;
-                                grownTempComponents.push_back(tempComponents[i]);
-                                globalVolumeChangeHistory.push_back(convexHullChange);
-                            }
-                    }
-                }
-            }
-            else if (currentStallReason == StallReason::NoBestTriangles) {
-                // Case 2: No Best Triangles
-                // Backtrack to a state where the component had fewer triangles.
-                // Remove the last added triangle.
-                // Reapply the greedy algorithm.
-                // TODO: Implement your logic here
-            }
-
-            // ... (Your existing logic for selecting and adding triangles)
-
-        }
-
-        bool anyComponentStalled = std::any_of(componentsStalled.begin(), componentsStalled.end(), [](bool v) { return v; });
-
-        if (anyComponentStalled) {
-            globalBacktrackStack.push(grownTempComponents);
-            unhappyBacktrackStack.push(badlyGrownTempComponents);
-
-            // Recursive call
-            if (recursiveBackTracking(
-                    globalBacktrackStack, unhappyBacktrackStack, issueTrianglesStacks, stallReasons,
-                    componentIndexStack, tempComponents, remainingTriangles,
-                    usedTriangles,
-                    repetitionCounts, componentWeights, globalVolumeChangeHistory, depth + 1)) {
-                return true;
-            }
-
-            // If we reached this point, recursive backtracking failed
-            // Pop the last state from the global backtrack stack
-            if (!globalBacktrackStack.empty()) {
-                tempComponents = globalBacktrackStack.top();
-                globalBacktrackStack.pop();
-            }
-        }
-    }
-    return false;
-}
-
-
-bool recursiveBackTracking(
-    std::stack<std::vector<Component>>& globalBacktrackStack,
-    std::stack<std::vector<Component>>& unhappyBacktrackStack,
-    std::vector<std::stack<Triangle>>& issueTrianglesStacks,
-    std::vector<StallReason> stallReasons,
-    std::stack<int> componentIndexStack,
-    std::vector<Component>& tempComponents,
-    std::unordered_set<Triangle>& remainingTriangles,
-    std::unordered_set<Triangle>& usedTriangles,
-    std::vector<int>& repetitionCounts,
-    std::vector<double>& componentWeights,
-    std::vector<double>& globalVolumeChangeHistory,
-    int depth)
-{
-    std::cout << "Entering recursiveBackTracking with depth: " << depth << std::endl;
-
-    // Right before returning false for max depth
-    if (depth >= 3) {
-        std::cout << "Maximum depth reached at depth: " << depth << ". Backtracking failed." << std::endl;
-        return false;
-    }
-
-    // Right before each recursive call
-    std::cout << "Making recursive call with incremented depth: " << (depth + 1) << std::endl;
-
-    // Right before returning false for each failure condition
-    std::cout << "Returning false due to condition XYZ at depth: " << depth << std::endl;
-
-    std::cout << "Before serialization, vector size: " << tempComponents.size() << std::endl;
-
-    std::string currentPathId = serializePathVector(tempComponents);
-    // std::cout << "Current path ID: " << currentPathId << std::endl;
-
-    std::cout << "BEFORE POPPING: "<< std::endl;
-    
-    inspectStack(globalBacktrackStack);
-    std::cout << "Unhappy backtrack stack: " << std::endl;
-    inspectStack(unhappyBacktrackStack);
-    for (size_t i = 0; i < issueTrianglesStacks.size(); ++i) {
-        std::cout << "Issue triangles for component " << i << ": " << std::endl;
-        
-        // Note that printStack will empty the stack,
-        // so make a copy if you need to keep the original intact
-        std::stack<Triangle> tempStack = issueTrianglesStacks[i];
-        printStack(tempStack);
-    }
-    std::cout << "--------Component index stack:-----------" << std::endl;
-    printIndexStack(componentIndexStack);
-    std::vector<Component> tempComponent;
-    if (!globalBacktrackStack.empty()) {
-        tempComponent = globalBacktrackStack.top();
-        globalBacktrackStack.pop();
-    }
-    // std::cout << "AFTER POPPING: "<< std::endl;
-    // inspectStack(globalBacktrackStack);
-    std::cout << "Temp components size: " << tempComponent.size() << std::endl;
-    for(const auto& comp : tempComponent) {
-        std::cout << "Components AREEEEEEEEEe: " << comp.toString() << std::endl;
-    }
-
-
-    int multipleStalls = std::count_if(issueTrianglesStacks.begin(), issueTrianglesStacks.end(), [](const std::stack<Triangle>& s) {
-        return !s.empty();
-    });
-
-    std::cout << multipleStalls << " components stalled." << std::endl;
-    
-
-    std::cout << "Temp components size: " << tempComponents.size() << std::endl;
-    
-    auto candidateTriangles = getCandidateTrianglesForEachComponent(tempComponents, remainingTriangles);
-
-    std::cout << "Candidate triangles size: " << candidateTriangles.size() << std::endl;
-
-    std::vector<double> minConvexHullChanges(tempComponents.size(), std::numeric_limits<double>::infinity());
-    std::vector<std::vector<std::pair<double, Triangle>>> adjustedCandidateTriangles(tempComponents.size());
-
-    // Modified loop for considering both primary and alternate candidates
-    for (size_t i = 0; i < tempComponents.size(); ++i) {
-        int repetitionCount = repetitionCounts[i];
-        double weightImpact = componentWeights[i];
-
-        for (const auto& candidatePair : candidateTriangles[i]) {
-            const Triangle& candidate = candidatePair.first;
-            double change = calculateConvexHullChange(tempComponents[i], candidate);
-            change *= weightImpact;
-            minConvexHullChanges[i] = std::min(minConvexHullChanges[i], change);
-            adjustedCandidateTriangles[i].emplace_back(change, candidate);
-        }
-    }
-
-    std::cout << "MIN CONVEX HULL CHANGE: " << minConvexHullChanges.size() << std::endl;
-
-    size_t N = 3;  // Number of top candidates to retrieve. 3 is arbitrary; set your desired number.
-    auto bestTrianglesForComponents = synchronizeGrowth(adjustedCandidateTriangles, minConvexHullChanges, componentWeights, globalVolumeChangeHistory, true, N);
-    std::cout << "Best triangles for components size: " << bestTrianglesForComponents.size() << std::endl;
-    for (size_t i = 0; i < tempComponents.size(); ++i) {
-        for (const Triangle& triangle : bestTrianglesForComponents[i]) {
-
-            std::vector<Component> oldComponents = tempComponents;
-            std::vector<int> oldRepetitionCounts = repetitionCounts;
-            std::vector<double> oldComponentWeights = componentWeights;
-
-            bool allValid = true;
-
-            std::vector<double> localConvexHullChanges;
-
-            for (size_t j = 0; j < tempComponents.size(); ++j) {
-                int oldZi = repetitionCounts[j];
-                int hypotheticalNewZi = oldZi + 1;
-
-                double oldWi = componentWeights[j];
-                double hypotheticalNewWi = calculateWeight(hypotheticalNewZi);
-
-                double hypotheticalConvexHullChange = calculateConvexHullChange(tempComponents[j], bestTrianglesForComponents[j][0]);
-
-                if (!isValidAfterAddingTriangle(tempComponents[j], bestTrianglesForComponents[j][0]) || 
-                    !isValidWeight(hypotheticalNewWi, oldWi)) {
-                    allValid = false;
+                    allUpdatesAreValid = false;
                     break;
                 }
-
-                localConvexHullChanges.push_back(hypotheticalConvexHullChange);
             }
 
-            if (allValid) {
-                for (size_t j = 0; j < tempComponents.size(); ++j) {
-                    tempComponents[j].addTriangle(bestTrianglesForComponents[j][0]);
-                    repetitionCounts[j] = oldRepetitionCounts[j] + 1;
-                    componentWeights[j] = calculateWeight(repetitionCounts[j]);
-                    globalVolumeChangeHistory.push_back(minConvexHullChanges[j]); // Update the global volume change history
-                }
-                
-                globalBacktrackStack.push(tempComponents);
+            if (allUpdatesAreValid) {
+                for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+                    // Assuming validation passed, add the triangle to the component
+                    successfullyAddedTriangles = true;
+                    Triangle bestTriangleForValidation = groupedByComponent[i][0];
+                    currentState.tempComponents[i].addTriangle(bestTriangleForValidation);
+                    currentState.trianglesThatLedToThisState[i].push_back(bestTriangleForValidation);
 
-                if (recursiveBackTracking(globalBacktrackStack, unhappyBacktrackStack, issueTrianglesStacks, stallReasons,
-                                        componentIndexStack, tempComponents, remainingTriangles,
-                                        usedTriangles,
-                                        repetitionCounts, componentWeights,
-                                        globalVolumeChangeHistory, depth + 1)) {
+                    // Update other state variables
+                    currentState.repetitionCounts[i] = hypotheticalNewZi[i];
+                    currentState.componentWeights[i] = hypotheticalNewWi[i];
+                    currentState.usedTriangles.insert(bestTriangleForValidation);
+                    currentState.remainingTriangles.erase(bestTriangleForValidation);
+                    std::cout << "all updates are valid here" << std::endl;
+                    std::cout << "best triangle is " << bestTriangleForValidation.toString() << std::endl;
+                }
+                currentState.candidateTriangles = getCandidateTrianglesForEachComponent(currentState);
+                printCandidateTrianglesForComponents(currentState.candidateTriangles);
+                bool allComponentsHaveCandidates = true;
+                for (const auto& candidates : currentState.candidateTriangles) {
+                    if (candidates.empty()) {
+                        allComponentsHaveCandidates = false;
+                        break;
+                    }
+                }
+                if (allComponentsHaveCandidates && successfullyAddedTriangles) {
                     return true;
                 }
             }
-
-            // Revert the changes
-            tempComponents = oldComponents;
-            repetitionCounts = oldRepetitionCounts;
-            componentWeights = oldComponentWeights;
-
-            // Update the tried triangles and paths
-            std::string newPathId = serializePathVector(tempComponents);
+            //Need to fix this and recursively go back maybe? or add this key to triedCombinations 
+            else {
+                std::cout << "Updates are not valid. Reverting to previous state." << std::endl;
+                exit(1);
+            }
         }
+        std::cout << "everything successful" << std::endl;
+
     }
 
-    return false;
 }
-
 
 //Does the seed grow with the temp component? like is the seed attached?
 //Why are triangles shrinking so rapidly?
-bool growComponentsSynchronously(
+std::pair<bool, std::vector<Component>> growComponentsSynchronously(
     std::vector<Component>& tempComponents,
     std::unordered_set<Triangle>& remainingTriangles,
     TriangleAdjacency& adjacency,
@@ -1966,190 +1834,237 @@ bool growComponentsSynchronously(
     std::unordered_set<Triangle>& usedTriangles) {
 
     std::cout << "Initial number of components: " << tempComponents.size() << std::endl;
-
-    // Existing variable declarations
-    std::vector<int> repetitionCounts(tempComponents.size(), 0);  // Count repetitions for each component
-    std::vector<double> componentWeights(tempComponents.size(), 1.0);  // Initial weights for each component
-    std::vector<std::stack<std::vector<Triangle>>> backtrackCandidateStacks(tempComponents.size());
-    std::vector<bool> componentsStalled(tempComponents.size(), false);
-    bool anyComponentFailed = false;
-    std::vector<double> globalVolumeChangeHistory;
-    std::vector<std::vector<std::pair<double, Triangle>>> adjustedCandidateTriangles(tempComponents.size());
-    std::stack<std::vector<Component>> globalBacktrackStack;  
-    std::stack<std::vector<Component>> unhappyBacktrackStack;  
-    std::vector<std::stack<Triangle>> issueTrianglesStacks(tempComponents.size());
-    std::stack<int> componentIndexStack;
-    std::vector<StallReason> stallReasons(tempComponents.size(), StallReason::None);
-
-
-
-    for (size_t i = 0; i < tempComponents.size(); ++i) {
-        repetitionCounts[i] = 1;
-        componentWeights[i] = 1.0;
-    }
-
-    if (tempComponents.empty() || remainingTriangles.empty()) {
-        return false;
-    }
-    bool anyComponentGrown = false;
-    bool allComponentsStalled = false;
-    bool backtrackingSuccessful = false;
-    std::vector<Component> grownTempComponents;
-    std::vector<Component> badlyGrownTempComponents;
-
-    std::vector<Component> updatedComponents;  // Step 1
     
+    AlgorithmState currentState;
+    // Existing variable declarations
+    currentState.tempComponents = tempComponents;
+    currentState.remainingTriangles = remainingTriangles;
+    currentState.usedTriangles = usedTriangles;
+    currentState.repetitionCounts = std::vector<int>(tempComponents.size(), 1);  // Initialize to 1
+    currentState.componentWeights = std::vector<double>(tempComponents.size(), 1.0);  // Initialize to 1.0
+    currentState.globalVolumeChangeHistory = std::vector<double>();
+    currentState.adjustedCandidateTriangles = std::vector<std::vector<std::pair<double, Triangle>>>(tempComponents.size());
+    currentState.backtrackCandidateStacks = std::vector<std::stack<std::vector<Triangle>>>(tempComponents.size());
+    currentState.componentsStalled = std::vector<bool>(tempComponents.size(), false);
+    currentState.componentIndexStack = std::stack<int>();
+    currentState.issueTrianglesStacks = std::vector<std::stack<Triangle>>(tempComponents.size());
+    currentState.anyComponentGrown = false;
+    currentState.allComponentsStalled = false;
+    currentState.triedCombinations = std::unordered_set<std::string>();
+    currentState.trianglesThatLedToThisState = std::map<int, std::deque<Triangle>>();
+    currentState.candidateTriangles = std::vector<std::vector<std::pair<Triangle, double>>>(tempComponents.size());
+    std::stack<AlgorithmState> globalBacktrackStack;
+    int backtrackCount = 0;
+    bool everHadMultiplePaths = false;
+
+
+    for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+        currentState.repetitionCounts[i] = 1;
+        currentState.componentWeights[i] = 1.0;
+    }
+
+    if (currentState.tempComponents.empty() || currentState.remainingTriangles.empty()) {
+        std::cout << "temp components empty or remaining triangles empty" << std::endl;
+        exit(1);
+        return std::make_pair(currentState.anyComponentGrown, currentState.tempComponents);
+    }
 
     while (true) {
-        bool allComponentsSuccessfullyGrown = true;
 
         std::cout << "----------While loop reset for next iteration-----------" << std::endl;
+        std::vector<Triangle> bestTrianglesForAllComponents;  // Initialize here
 
         // New Code: Reset flags for each iteration
-        anyComponentGrown = false;
-        allComponentsStalled = false; // New variable
+        currentState.anyComponentGrown = false;
+        currentState.allComponentsStalled = false;
         
-        std::fill(componentsStalled.begin(), componentsStalled.end(), false);
-
+        std::fill(currentState.componentsStalled.begin(), currentState.componentsStalled.end(), false);
+        AlgorithmState tempState = currentState;
         // Retrieve primary candidate triangles
-        auto candidateTriangles = getCandidateTrianglesForEachComponent(tempComponents, remainingTriangles);
+        currentState.candidateTriangles = getCandidateTrianglesForEachComponent(currentState);
+        printCandidateTrianglesForComponents(currentState.candidateTriangles);
+        bool atLeastOneComponentHasCandidates = false;  // Will be set to true if any component has candidate triangles
+        // First, check if at least one component has candidate triangles
+        for (const auto& candidates : currentState.candidateTriangles) {
+            if (!candidates.empty()) {
+                atLeastOneComponentHasCandidates = true;
+                break;
+            }
+        }
 
-        std::vector<double> minConvexHullChanges(tempComponents.size(), std::numeric_limits<double>::infinity());
+        // Now, proceed to flag components with no candidate triangles as "stalled", but only if at least one component does have candidate triangles
+        if (atLeastOneComponentHasCandidates) {
+            bool allComponentsHaveCandidates = true; // Initialize to true
+            for (size_t i = 0; i < currentState.candidateTriangles.size(); ++i) {
+                if (currentState.candidateTriangles[i].empty()) {
+                    std::cout << "Component " << i << " is empty and will be flagged as stalled." << std::endl;
+                    currentState.componentIndexStack.push(i);
+                    currentState.componentsStalled[i] = true;
+                    allComponentsHaveCandidates = false; // Set to false if any component is empty
+                } else {
+                    std::cout << "Component " << i << " is not empty." << std::endl;
+                }
+            }
+
+        } else {
+            std::cout << "All components have empty candidateTriangles. Exiting..." << std::endl;
+            return std::make_pair(currentState.anyComponentGrown, currentState.tempComponents);
+        }
+
+
+        // Count how many components are stalled
+        int numComponentsStalled = std::count(currentState.componentsStalled.begin(), currentState.componentsStalled.end(), true);
+
+        //If at least one component is stalled, proceed with backtracking
+        if (numComponentsStalled > 0 && !globalBacktrackStack.empty() && everHadMultiplePaths) {
+            std::cout << "-----BACKTRACKING NOW-----" << std::endl;
+
+            // Restore to prevState
+            std::string key = generateKeyForCombination(currentState.trianglesThatLedToThisState); // Generate a unique key for this combination
+            currentState.triedCombinations.insert(key); // Mark this combination as a bad one
+
+            auto tempTriedCombinations = currentState.triedCombinations;
+            AlgorithmState prevState = globalBacktrackStack.top(); // Take the top of the stack but don't pop it yet
+            currentState = prevState;  // Assuming that currentState is accessible
+            currentState.triedCombinations = tempTriedCombinations;
+
+            if (!recursiveBackTracking(globalBacktrackStack, currentState)) {
+                std::cout << "No solution exists!" << std::endl;
+                return std::make_pair(currentState.anyComponentGrown, currentState.tempComponents);
+            }
+            else {
+                backtrackCount++;
+                if (backtrackCount >= 3) {
+                    std::cout << "-----BACKTRACKING COMPLETE-----" << std::endl;
+                    return std::make_pair(currentState.anyComponentGrown, currentState.tempComponents);
+                }
+            }
+        }
+
+        std::cout << "Candidate triangles for components size: " << currentState.candidateTriangles.size() << std::endl;
+        
+        std::vector<std::vector<std::pair<Triangle, double>>> fullCandidateList = currentState.candidateTriangles;
+
+        for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+            std::vector<Triangle> allTrianglesForThisComponent;
+
+            // Sort the candidate list by score
+            std::sort(fullCandidateList[i].begin(), fullCandidateList[i].end(),
+                    [](const std::pair<Triangle, double>& a, const std::pair<Triangle, double>& b) {
+                        return a.second < b.second;
+                    });
+
+            // Extract just the triangles from the sorted candidate list
+            for (const auto& pair : fullCandidateList[i]) {
+                allTrianglesForThisComponent.push_back(pair.first);
+            }
+
+            // Push the sorted list onto the stack for this component
+            if (!allTrianglesForThisComponent.empty()) {
+                currentState.backtrackCandidateStacks[i].push(allTrianglesForThisComponent);
+                std::cout << "Pushed " << allTrianglesForThisComponent.size() << " triangles onto backtrack stack for component " << i << std::endl;
+            }
+        }
+
+
+        std::vector<double> minConvexHullChanges(currentState.tempComponents.size(), std::numeric_limits<double>::infinity());
+        for (auto& vec : currentState.adjustedCandidateTriangles) {
+            vec.clear();
+        }
         // Modified loop for considering both primary and alternate candidates
-        for(size_t i = 0; i < tempComponents.size(); ++i) {
-            int repetitionCount = repetitionCounts[i];
-            double weightImpact = componentWeights[i];
+        for(size_t i = 0; i < currentState.tempComponents.size(); ++i) {
+            int repetitionCount = currentState.repetitionCounts[i];
+            double weightImpact = currentState.componentWeights[i];
             std::cout << "Component " << i << " repetition count : " << repetitionCount << std::endl;
             std::cout << "Component " << i << " weight impact: " << weightImpact << std::endl;
 
-            for(const auto& candidatePair : candidateTriangles[i]) {
+            for(const auto& candidatePair : currentState.candidateTriangles[i]) {
                 const Triangle& candidate = candidatePair.first;
-                double change = calculateConvexHullChange(tempComponents[i], candidate);
+                // Check for contiguity before even calculating convex hull changes
+                if (!isValidAfterAddingTriangle(currentState.tempComponents[i], candidate)) {
+                    continue;  // Skip non-contiguous triangles
+                }
+                double change = calculateConvexHullChange(currentState.tempComponents[i], candidate);
                 change *= weightImpact;
                 minConvexHullChanges[i] = std::min(minConvexHullChanges[i], change);
                 
-                adjustedCandidateTriangles[i].emplace_back(change, candidate);
+                currentState.adjustedCandidateTriangles[i].emplace_back(change, candidate);
             }
         }
+        std::cout << "ABOUT TO SYNCHRONIZE GROWTH" << std::endl;
         
-        size_t N = 3;  // Number of top candidates to retrieve. 3 is arbitrary; set your desired number.
-        auto bestTrianglesForComponents = synchronizeGrowth(adjustedCandidateTriangles, minConvexHullChanges, componentWeights, globalVolumeChangeHistory, true, N);
-        std::cout << "Best triangles for components size: " << bestTrianglesForComponents.size() << std::endl;
-        for (size_t i = 0; i < tempComponents.size(); ++i) {
-            std::vector<Triangle> viableTriangles = bestTrianglesForComponents[i];
-            std::cout << "Viable triangles for component " << i << ": " << viableTriangles.size() << std::endl;
-            if (!viableTriangles.empty()) {
-                backtrackCandidateStacks[i].push(viableTriangles);
+        auto bestTrianglesForComponents = synchronizeGrowth(currentState, minConvexHullChanges, true);
+        bool multiplePaths = false;
+        // Initialize multiplePaths to true, and set it to false if any component does not have multiple paths
+        for (const auto& bestTriangles : bestTrianglesForComponents) {
+            if (bestTriangles.size() > 1) {  // Multiple "best" triangles for this component
+                multiplePaths = true;
+                everHadMultiplePaths = true;  // Update it to true
+                break;
             }
         }
-
-        for (size_t i = 0; i < tempComponents.size(); ++i) {
-
-            if (bestTrianglesForComponents[i].empty()) {
-                std::cout << "No best triangles for component " << i << std::endl;
-                stallReasons[i] = StallReason::NoBestTriangles;
-                allComponentsSuccessfullyGrown = false;
-                tempComponents[i].id = i;
-                badlyGrownTempComponents.push_back(tempComponents[i]);
-                componentIndexStack.push(i);
-                componentsStalled[i] = true;
-                continue;
-            }
-
-            Triangle bestTriangle = bestTrianglesForComponents[i][0];
-            std::cout << "Best triangle for component " << i << ": " << bestTriangle.toString() << std::endl;
+        printBestTrianglesForComponents(bestTrianglesForComponents);
+        bool shouldBreakOuterLoop = false;
+        for (size_t i = 0; i < currentState.tempComponents.size(); ++i) {
             
-            if (usedTriangles.find(bestTriangle) != usedTriangles.end()) {
-                std::cout << "Best triangle for component " << i << " already used." << std::endl;
-                std::cout << "Best triangle: " << bestTriangle.toString() << std::endl;
-                stallReasons[i] = StallReason::BestTriangleUsed;
-                issueTrianglesStacks[i].push(bestTriangle);
-                allComponentsSuccessfullyGrown = false;
-                componentsStalled[i] = true;
-                tempComponents[i].id = i;
-                badlyGrownTempComponents.push_back(tempComponents[i]);
-                componentIndexStack.push(i);
-                continue;
+            std::vector<int> hypotheticalNewZi(currentState.tempComponents.size());
+            std::vector<double> hypotheticalNewWi(currentState.tempComponents.size());
+            for (size_t j = 0; j < currentState.tempComponents.size(); ++j) {
+                int oldZi = currentState.repetitionCounts[j];
+                hypotheticalNewZi[j] = oldZi + 1;
+                double oldWi = currentState.componentWeights[j];
+                hypotheticalNewWi[j] = calculateWeight(hypotheticalNewZi[j]);
             }
-
-            int oldZi = repetitionCounts[i]; // Store the current repetition count
-            int hypotheticalNewZi = oldZi + 1; // This would be the new repetition count if we add the triangle
-
-            double oldWi = calculateWeight(oldZi);  // Calculate the old weight
-            double hypotheticalNewWi = calculateWeight(hypotheticalNewZi);  // Pre-calculate the potential new weight
-            if (isValidAfterAddingTriangle(tempComponents[i], bestTriangle) && 
-                isValidWeight(hypotheticalNewWi, oldWi)) {  // Use the hypothetical new weight
-                tempComponents[i].addTriangle(bestTriangle);  // Add the triangle to the component
-                repetitionCounts[i] = hypotheticalNewZi; // Update the repetition count to the hypothetical new value
-                componentWeights[i] = hypotheticalNewWi;  // Update the weight to the hypothetical new value
-
-                std::cout << "IS VALID AFTER ADDING TRIANGLE " << std::endl;
-                double convexHullChange = minConvexHullChanges[i];
+            std::cout << "MADE IT TO PHASE 1 " << std::endl;
+            // Validate that all best triangles can be added and are not already used
+            bool allUpdatesAreValid = true;
+            bool allBestTrianglesAreValid = true;
+            for (size_t j = 0; j < currentState.tempComponents.size(); ++j) {
+                // Check if bestTrianglesForComponents[j] is empty
+                Triangle bestTriangleForValidation = bestTrianglesForComponents[j][0];
+                bestTrianglesForAllComponents.push_back(bestTriangleForValidation);  // Populate here
                 
-                remainingTriangles.erase(bestTriangle);
-                anyComponentGrown = true;
-                usedTriangles.insert(bestTriangle);
-                tempComponents[i].id = i;
-                grownTempComponents.push_back(tempComponents[i]);
-                globalVolumeChangeHistory.push_back(convexHullChange);
+                if (!isValidAfterAddingTriangle(currentState.tempComponents[j], bestTriangleForValidation) || 
+                    !isValidWeight(hypotheticalNewWi[j], currentState.componentWeights[j])) {
+                    allUpdatesAreValid = false;
+                    break;
+                }
 
-                updatedComponents.push_back(tempComponents[i]);  // Step 2
- 
-            } else {
-                std::cout << "----------INVALID TRIANGLE----------" << std::endl;
-                std::cout << "Component " << i << " failed to grow." << std::endl;
-                tempComponents[i].id = i;
-                badlyGrownTempComponents.push_back(tempComponents[i]);
-                componentIndexStack.push(i);
-                componentsStalled[i] = true;
-                allComponentsStalled = true;
+                if (currentState.usedTriangles.find(bestTriangleForValidation) != currentState.usedTriangles.end()) {
+                    std::cout << "Triangle " << bestTriangleForValidation.toString() << " is already used." << std::endl;
+                    allBestTrianglesAreValid = false;
+                    break;
+                }
             }
-
-            // Output debugging info
-            std::cout << "Component " << i << " repetition count : " << hypotheticalNewZi << std::endl;
-            std::cout << "Component " << i << " weight impact: " << hypotheticalNewWi << std::endl;
-            std::cout << "newWi: " << hypotheticalNewWi << std::endl;
-            std::cout << "oldWi: " << componentWeights[i] << std::endl;
-            std::cout << "IS VALID AFTER ADDING TRIANGLE " << isValidAfterAddingTriangle(tempComponents[i], bestTriangle) << std::endl;
-            std::cout << "IS VALID WEIGHT " << isValidWeight(hypotheticalNewWi, componentWeights[i]) << std::endl;
-            std::cout << "Temp component " << i << " triangles after trying to grow: " << tempComponents[i].triangles.size() << std::endl;
-        }
-        if (allComponentsSuccessfullyGrown) {
-            globalBacktrackStack.push(tempComponents);
-        }
-        tempComponents.clear();  // Step 3
-        tempComponents = updatedComponents;
-        updatedComponents.clear();  // Clear it for the next iteration
-
-        for (size_t i = 0; i < tempComponents.size(); ++i) {
-            if (componentsStalled[i]) {
-                std::cout << "Component " << i << " is stalled." << std::endl;
-                std::cout << "Backtrack candidates for component " << i << ": " << backtrackCandidateStacks[i].size() << std::endl;
+            std::cout << "MADE IT TO PHASE 2 " << std::endl;
+            if (allUpdatesAreValid && allBestTrianglesAreValid) {
+                if (multiplePaths) {
+                    std::cout << "Multiple paths forward. Saving state to backtrack stack." << std::endl;
+                    globalBacktrackStack.push(currentState);
+                }
+                for (size_t j = 0; j < currentState.tempComponents.size(); ++j) {
+                    Triangle bestTriangle = bestTrianglesForComponents[j][0];
+                    std::cout << "Adding triangle " << bestTriangle.toString() << " to component " << j << std::endl;
+                    currentState.tempComponents[j].addTriangle(bestTriangle);
+                    currentState.repetitionCounts[j] = hypotheticalNewZi[j];
+                    currentState.componentWeights[j] = hypotheticalNewWi[j];
+                    double convexHullChange = minConvexHullChanges[j];
+                    currentState.anyComponentGrown = true;
+                    currentState.usedTriangles.insert(bestTriangle);
+                    currentState.remainingTriangles.erase(bestTriangle);
+                    currentState.trianglesThatLedToThisState[i].push_back(bestTriangle);
+                    currentState.globalVolumeChangeHistory.emplace_back(convexHullChange);
+                    bestTrianglesForComponents[j].erase(bestTrianglesForComponents[j].begin());
+                    shouldBreakOuterLoop = true;  // Set the flag to true
+                }
             }
-        }
-        
-        bool anyComponentStalled = std::any_of(componentsStalled.begin(), componentsStalled.end(), [](bool v) { return v; });
-
-        if (anyComponentStalled) {
-            unhappyBacktrackStack.push(badlyGrownTempComponents);
-            std::cout << "-----BACKTRACKING NOW-----" << std::endl;
-                bool result = recursiveBackTracking(
-                    globalBacktrackStack, unhappyBacktrackStack, issueTrianglesStacks, stallReasons,
-                    componentIndexStack, tempComponents, remainingTriangles, 
-                    usedTriangles, repetitionCounts, componentWeights, globalVolumeChangeHistory, 0
-                );
-
-            if (!backtrackingSuccessful) {
-                std::cout << "Maximum depth reached. Backtracking failed." << std::endl;
-                anyComponentGrown = false;
+            std::cout << "Temp component " << i << " triangles after trying to grow: " << currentState.tempComponents[i].triangles.size() << std::endl;
+            if (shouldBreakOuterLoop) {
+                break;  // This will break out of the outer loop
             }
-        }
-
-        if (!anyComponentGrown) {
-            break;
+            
         }
     }
-    return anyComponentGrown;
 }
 
 
@@ -2186,49 +2101,6 @@ bool validateFinalState(const std::vector<Component>& components, const Cluster&
     return true;
 }
 
-
-// void reseedComponents(
-//     std::vector<Component>& tempComponents,
-//     std::unordered_set<Triangle>& remainingTriangles,
-//     std::vector<double>& weights,
-//     double tau_S,
-//     std::unordered_map<std::string, int>& typeCounts
-// ) {
-//     std::vector<Triangle> newSeeds = findSeeds(remainingTriangles, weights, tau_S);
-
-//     // Update typeCounts based on the new seeds
-//     for (const auto& seed : newSeeds) {
-//         typeCounts[seed.type]++;  // Increment the count for this type
-//     }
-
-//     // You may also decide to sort newSeeds based on typeCounts, if desired
-//     std::sort(newSeeds.begin(), newSeeds.end(), [&](const Triangle& a, const Triangle& b) {
-//         return typeCounts[a.type] > typeCounts[b.type];
-//     });
-
-//     // Restore skippedTriangles back to remainingTriangles
-//     for(const auto& skippedTriangle : skippedTriangles) {
-//         remainingTriangles.insert(skippedTriangle);
-//     }
-//     skippedTriangles.clear();
-
-//     // Re-initialize tempComponents with the new seeds
-//     if(!newSeeds.empty()) {
-//         tempComponents = initializeTempComponents(newSeeds, remainingTriangles);
-//     }
-// }
-
-//Create a final components that the tempComponents from the first run is added to,
-//I think reseed, restructures the tempComponents to start from scratch
-//I dont know why: 
-// Temp component triangles after growing: 5
-// Temp component triangles after growing: 3
-// Temp component triangles after growing: 6
-// Temp component triangles after growing: 5
-//Maybe they're not similar triangles that are growing? Possibly have to save tempComponents pre and post growth to obj file
-//They're growing so unevenly. I would think this would be caught in the validation step but it's not
-//I think it's because the triangles are being added to the tempComponents in a random order - maybe? (copilot suggestion)
-
 std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster,
                                                     TriangleAdjacency& adjacency,
                                                     std::vector<double>& weights,
@@ -2249,57 +2121,46 @@ std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster,
 
     std::cout << "-----iteration: " << iteration << " starting----- " << std::endl;
     std::cout << "Number of triangles in cluster: " << cluster.triangles.size() << std::endl;
-
+    bool needsReseeding = false;
+    std::vector<Component> tempComponents;
+    std::vector<Component> deepestComponents;
     while (!remainingTriangles.empty()) {
-        std::vector<Component> currentIterationComponents;
-        std::vector<Triangle> seeds = findSeeds(remainingTriangles, weights, tau_S);
-
+        std::vector<Triangle> seeds;
+        // Regular seeding and initialization
+        seeds = findSeeds(remainingTriangles, weights, tau_S);
         if (seeds.empty()) {
             std::cout << "No seeds found. Exiting." << std::endl;
-            break;
+            exit(1);
         }
-
-        std::vector<Component> tempComponents = initializeTempComponents(seeds, remainingTriangles);
-        bool canGrow = true;
-
-        while (canGrow) {
+        tempComponents = initializeTempComponents(seeds, remainingTriangles);
+        while (!remainingTriangles.empty()) {
             std::cout << "Triangle count before growing in remainingTriangles: " << remainingTriangles.size() << std::endl;
             std::cout << "Triangle count in seeds: " << seeds.size() << std::endl;
             for(const auto& component : tempComponents) {
                 std::cout << "Temp component triangles before growing: " << component.triangles.size() << std::endl;
             }
-            canGrow = growComponentsSynchronously(
+            std::pair<bool, std::vector<Component>> result = growComponentsSynchronously(
                 tempComponents, remainingTriangles, adjacency,
                 typeCounts, usedTriangles
             );
-
-            std::cout << "--------DONE WITH GROW COMPONENTS SYNCHRONOUSLY---------" << std::endl;
-
-            std::cout << "Triangle count after growing in remainingTriangles: " << remainingTriangles.size() << std::endl;
-            std::cout << "Triangle count in seeds after growing: " << seeds.size() << std::endl;
-
-            // Check contiguity of each component
-            for (const auto& component : tempComponents) {
-                std::cout << "Temp component triangles after growing: " << component.triangles.size() << std::endl;
-                if (!areTrianglesContiguous(component.triangles)) {
-                    std::cout << "Component became non-contiguous during growth." << std::endl;
-                }
+            if(remainingTriangles.empty()) {
+                std::cout << "Remaining triangles is empty" << std::endl;
+                exit(1);
             }
-            // Re-seed the remaining triangles here if necessary
-            std::vector<Triangle> newSeeds = findSeeds(remainingTriangles, weights, tau_S);
-
-            // if (!newSeeds.empty()) {
-            //     reseedComponents(tempComponents, remainingTriangles, weights, tau_S, skippedTriangles, typeCounts);
-            // }
-        }
-
-        // Adding components to finalComponents, but with uniqueness check
-        for (const auto& comp : currentIterationComponents) {
-            bool alreadyInFinal = std::any_of(finalComponents.begin(), finalComponents.end(),
-                                            [&comp](const Component& existingComponent) { return existingComponent == comp; });
-            if (!alreadyInFinal) {
-                finalComponents.push_back(comp);
-            }
+            bool canGrow = result.first;
+            deepestComponents = result.second;
+            // If we couldn't grow, use the deepest components found so far
+            // and then re-seed with remaining types.
+            finalComponents.insert(finalComponents.end(), deepestComponents.begin(), deepestComponents.end());
+            // Reset tempComponents for the next iteration
+            tempComponents.clear();
+            usedTriangles.clear();
+            needsReseeding = true;
+            // logic to re-seed with remaining types (e.g., C's if AB was the deepest)
+            seeds = findSeeds(remainingTriangles, weights, tau_S);
+            std::vector<Component> newTempComponents = initializeTempComponents(seeds, remainingTriangles);
+            tempComponents.insert(tempComponents.end(), newTempComponents.begin(), newTempComponents.end());
+            std::cout << "RESEEDED PROPERLY" << std::endl;
         }
 
         std::cout << "Iteration " << iteration << " completed." << std::endl;
@@ -2307,6 +2168,9 @@ std::vector<Component> randomizedGrowthOptimization(const Cluster& cluster,
     }
     // Before returning finalComponents, perform the merging operation
     std::cout << "Before merging: " << finalComponents.size() << std::endl;
+    for (const auto& component : finalComponents) {
+        std::cout << "Component has " << component.triangles.size() << " triangles." << std::endl;
+    }
     mergeOverlappingComponents(finalComponents, adjacency);
     std::cout << "Triangle count at the start: " << cluster.triangles.size() << std::endl;
     std::cout << "After merging: " << finalComponents.size() << std::endl;
